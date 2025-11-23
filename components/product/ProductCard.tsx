@@ -72,7 +72,6 @@
 // }
 
 
-
 "use client";
 
 import Image from "next/image";
@@ -97,24 +96,23 @@ export default function ProductCard({ product }: ProductCardProps) {
   const dispatch = useAppDispatch();
 
   const handleAddToCart = (e: React.MouseEvent) => {
-    e.preventDefault(); // Prevent navigation if clicked on the button
-    
+    e.preventDefault(); 
     if (product.variants.length > 0) {
+      // Add logic (default to first variant)
       const selectedVariant = product.variants[0];
-      
       const payload = {
         product: product,
         selectedVariant: selectedVariant
       };
-      
       dispatch(addItem(payload));
     }
   };
 
   return (
-    <Card className="group overflow-hidden flex flex-col h-full border shadow-sm hover:shadow-md transition-all duration-200">
-      {/* Header: Image - Aspect Square for Alibaba look */}
-      <CardHeader className="p-0 relative aspect-square bg-muted/20">
+    <Card className="group h-full flex flex-col border shadow-sm hover:shadow-md transition-all duration-200">
+      
+      {/* 1. Image Header - Tighter aspect ratio (Square) */}
+      <CardHeader className="p-0 relative aspect-square bg-muted/10 border-b">
         <Link href={`/product/${product._id}`} className="block w-full h-full">
           <Image
             src={product.images[0] || "/placeholder-product.png"}
@@ -127,35 +125,44 @@ export default function ProductCard({ product }: ProductCardProps) {
         </Link>
       </CardHeader>
 
-      {/* Content: Title & Brand */}
-      <CardContent className="p-2 sm:p-3 flex-grow flex flex-col gap-1">
-        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
+      {/* 2. Content - Reduced Padding & Gaps */}
+      <CardContent className="p-2 flex flex-col gap-1 flex-grow">
+        
+        {/* Brand (Tiny) */}
+        <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">
           {product.brand}
         </p>
-        <Link href={`/product/${product._id}`} className="hover:underline">
-          {/* line-clamp-2 ensures all cards stay roughly the same height even with long titles */}
-          <h3 className="text-sm font-medium leading-tight line-clamp-2 text-foreground/90 h-10">
+        
+        <Link href={`/product/${product._id}`}>
+          {/* Title - Clamped to 1 line to save vertical space */}
+          <h3 className="text-sm font-semibold leading-tight line-clamp-1 text-foreground">
             {product.name}
           </h3>
+          
+          {/* Description - Clamped to 2 lines as requested */}
+          <p className="text-xs text-muted-foreground line-clamp-2 leading-snug mt-1">
+            {product.description}
+          </p>
         </Link>
       </CardContent>
 
-      {/* Footer: Price & Action */}
-      <CardFooter className="p-2 sm:p-3 pt-0 flex items-center justify-between gap-2 mt-auto">
+      {/* 3. Footer - Compact */}
+      <CardFooter className="p-2 pt-0 flex items-center justify-between gap-2 mt-auto">
         <div className="flex flex-col">
-          <span className="text-xs text-muted-foreground">Price</span>
-          <span className="text-base sm:text-lg font-bold text-primary">
+          <span className="text-[10px] text-muted-foreground leading-none">From</span>
+          <span className="text-sm sm:text-base font-bold text-primary leading-tight">
             ${product.displayPrice.toFixed(2)}
           </span>
         </div>
 
+        {/* Smaller Button */}
         <Button 
           onClick={handleAddToCart} 
           disabled={product.variants.length === 0}
           size="sm"
-          className="h-8 px-3 text-xs shadow-sm"
+          className="h-7 px-2 text-xs"
         >
-          <ShoppingCart className="h-3.5 w-3.5 sm:mr-2" />
+          <ShoppingCart className="h-3 w-3 sm:mr-1" />
           <span className="hidden sm:inline">Add</span>
         </Button> 
       </CardFooter>

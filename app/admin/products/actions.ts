@@ -191,8 +191,6 @@
 
 
 
-
-
 "use server";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -205,7 +203,9 @@ import { IVariant } from "@/types/product";
 import { v2 as cloudinary } from 'cloudinary';
 import { z } from 'zod';
 
-// --- CLOUDINARY CONFIG ---
+// ==========================================
+// 1. CLOUDINARY CONFIGURATION
+// ==========================================
 cloudinary.config({ 
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
   api_key: process.env.CLOUDINARY_API_KEY, 
@@ -213,19 +213,25 @@ cloudinary.config({
   secure: true,
 });
 
-// Define form state type
+// ==========================================
+// 2. TYPES & HELPERS
+// ==========================================
 interface FormState {
   success: boolean;
   message: string;
 }
 
-// --- HELPER: Upload to Cloudinary ---
+/**
+ * Uploads a file buffer to Cloudinary.
+ * Includes a 60s timeout to handle larger files or slower connections.
+ */
 async function uploadImageToCloudinary(fileBuffer: Buffer): Promise<string> {
     return new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
             { 
-              folder: "addis-auto-spare-parts/new-product",
-              resource_type: 'image' 
+              folder: "addis-auto-spare-parts/products", 
+              resource_type: 'image',
+              timeout: 60000 
             },
             (error, result) => {
                 if (error) return reject(error);
@@ -236,13 +242,17 @@ async function uploadImageToCloudinary(fileBuffer: Buffer): Promise<string> {
     });
 }
 
-// --- ACTION: Delete Product ---
+// ==========================================
+// 3. DELETE ACTION
+// ==========================================
 export async function deleteProduct(productId: string) {
+  // Authorization Check
   const user = await getCurrentUser();
   if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
     throw new Error("Unauthorized"); 
   }
 
+  // Validation
   const schema = z.string().min(1);
   const validatedId = schema.safeParse(productId);
 
@@ -252,11 +262,16 @@ export async function deleteProduct(productId: string) {
 
   try {
     await dbConnect();
+    
     const deletedProduct = await Product.findByIdAndDelete(validatedId.data);
 
     if (!deletedProduct) {
       throw new Error("Product not found.");
     }
+
+    // Optional: Add logic here to delete associated images from Cloudinary 
+    // if you stored public_ids in your model.
+
   } catch (error) {
     console.error("Failed to delete product:", error);
     throw new Error("Database error: Could not delete product.");
@@ -266,12 +281,14 @@ export async function deleteProduct(productId: string) {
   revalidatePath("/products");
 }
 
-// --- ACTION: Create or Update Product ---
+// ==========================================
+// 4. CREATE / UPDATE ACTION
+// ==========================================
 export async function createOrUpdateProduct(
   prevState: FormState,
   formData: FormData
 ): Promise<FormState> {
-  // 1. Auth Check
+  // A. Authorization
   const user = await getCurrentUser();
   if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
     return { success: false, message: "Unauthorized: You do not have permission." };
@@ -283,7 +300,7 @@ export async function createOrUpdateProduct(
     const productId = formData.get("productId") as string | null;
     const isEditMode = !!(productId && productId.length > 0);
 
-    // 2. Extract Basic Fields
+    // B. Extract Basic Fields
     const rawData = {
       name: formData.get("name") as string,
       description: formData.get("description") as string,
@@ -292,22 +309,39 @@ export async function createOrUpdateProduct(
       isActive: formData.get("isActive") === "on",
     };
 
-    // 3. Extract New Models Fields (Compatibility & Year)
+    // C. Extract Compatibility Fields
     const yearStart = formData.get("yearStart") ? Number(formData.get("yearStart")) : undefined;
     const yearEnd = formData.get("yearEnd") ? Number(formData.get("yearEnd")) : undefined;
     
+    // Model tags come as a comma-separated string from the hidden input
     const modelCompatibilityRaw = formData.get("modelCompatibility") as string;
     const modelCompatibility = modelCompatibilityRaw ? modelCompatibilityRaw.split(",").filter(Boolean) : [];
 
-    // 4. Handle Images (Cloudinary)
+    // D. Extract "Specs" (The new Rich Category Attributes)
+    // The client sends this as a JSON string: [{ name: "Voltage", value: "12V" }, ...]
+    const specsRaw = formData.get("specsJSON") as string;
+    let specs = [];
+    try {
+        specs = specsRaw ? JSON.parse(specsRaw) : [];
+    } catch (e) {
+        return { success: false, message: "Invalid specifications data format." };
+    }
+
+    // E. Handle Images (Cloudinary)
     const existingImagesToKeep = (formData.get("existingImages") as string || '').split(',').filter(Boolean);
     const newImageFiles = formData.getAll("image-uploads") as File[];
     
     const uploadedImageUrls: string[] = [];
+    
     if (newImageFiles.length > 0) {
-        // Filter out empty file inputs
+        // Filter out empty file inputs (sometimes browsers send empty ones)
         const validFiles = newImageFiles.filter(file => file.size > 0 && file.name !== "undefined");
         
+        // Server-side size check (e.g., 4MB)
+        if (validFiles.some(f => f.size > 4 * 1024 * 1024)) {
+            return { success: false, message: "One or more images exceed the 4MB limit." };
+        }
+
         const uploadPromises = validFiles.map(async (file) => {
             const arrayBuffer = await file.arrayBuffer();
             const buffer = Buffer.from(arrayBuffer);
@@ -320,19 +354,21 @@ export async function createOrUpdateProduct(
 
     const finalImages = [...existingImagesToKeep, ...uploadedImageUrls];
 
-    // 5. Handle Variants (Using the robust JSON parsing from the new form)
-    // The client now sends a 'variantsJSON' string which is cleaner than parsing keys
+    // F. Handle Variants
     const variantsRaw = formData.get("variantsJSON") as string;
     let variants: IVariant[] = [];
     
     if (variantsRaw) {
-      variants = JSON.parse(variantsRaw);
+      try {
+        variants = JSON.parse(variantsRaw);
+      } catch (e) {
+        return { success: false, message: "Corrupt variant data received." };
+      }
     } else {
-      // Fallback: If for some reason JSON is missing, we fail safely
       return { success: false, message: "Variant data is missing." };
     }
 
-    // 6. Validation
+    // G. Final Validation
     if (!rawData.name || !rawData.brand || !rawData.category) {
       return { success: false, message: "Name, Brand, and Category are required." };
     }
@@ -340,23 +376,24 @@ export async function createOrUpdateProduct(
       return { success: false, message: "At least one variant must be added." };
     }
 
-    // 7. Calculate Display Price
+    // H. Calculate Display Price (Lowest price among variants)
     const displayPrice = Math.min(...variants.map((v: any) => parseFloat(v.price) || Infinity));
     if (displayPrice === Infinity) {
         return { success: false, message: "One or more variants has an invalid price." };
     }
     
-    // 8. Construct Final Object
+    // I. Construct Final DB Object
     const productData = { 
       ...rawData, 
       images: finalImages, 
       variants, 
       displayPrice,
       modelCompatibility,
-      yearRange: { start: yearStart, end: yearEnd }
+      yearRange: { start: yearStart, end: yearEnd },
+      specs // Save the dynamic attributes
     };
 
-    // 9. DB Operation
+    // J. Database Operation
     if (isEditMode) {
       await Product.findByIdAndUpdate(productId, productData);
     } else {
@@ -366,12 +403,12 @@ export async function createOrUpdateProduct(
   } catch (error: any) {
     console.error("Error creating/updating product:", error);
     if (error.code === 11000) {
-      return { success: false, message: `Duplicate data detected (likely SKU or Name). Please check.` };
+      return { success: false, message: `Duplicate data detected (likely SKU or Name).` };
     }
     return { success: false, message: error.message || "An unexpected error occurred." };
   }
 
-  // 10. Revalidate & Redirect
+  // K. Revalidate & Redirect
   revalidatePath("/admin/products");
   revalidatePath("/products");
   

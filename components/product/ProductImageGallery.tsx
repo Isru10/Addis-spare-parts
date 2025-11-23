@@ -1,3 +1,6 @@
+// src/components/product/ProductImageGallery.tsx
+
+
 "use client";
 
 import { useState } from "react";
@@ -14,7 +17,6 @@ export default function ProductImageGallery({ images, productName }: ProductImag
   const [showZoom, setShowZoom] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
-  // Handle mouse movement for zoom effect
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
     const x = ((e.clientX - left) / width) * 100;
@@ -23,9 +25,16 @@ export default function ProductImageGallery({ images, productName }: ProductImag
   };
 
   return (
-    <div className="flex flex-col-reverse md:flex-row gap-4 sticky top-24">
-      {/* Thumbnails Strip (Vertical on Desktop, Horizontal on Mobile) */}
-      <div className="flex md:flex-col gap-2 overflow-x-auto md:overflow-visible pb-2 md:pb-0">
+    // FIX APPLIED HERE:
+    // 1. Removed 'sticky top-24'
+    // 2. Added 'relative' (for mobile)
+    // 3. Added 'md:sticky md:top-24' (so it only sticks on desktop/tablet)
+    // 4. Added 'h-fit' to ensure it doesn't stretch weirdly
+    <div className="flex flex-col-reverse md:flex-row gap-4 relative md:sticky md:top-24 h-fit">
+      
+      {/* Thumbnails Strip */}
+      {/* Mobile: Horizontal scroll | Desktop: Vertical column */}
+      <div className="flex md:flex-col gap-2 overflow-x-auto md:overflow-visible pb-2 md:pb-0 scrollbar-none">
         {images.map((img, index) => (
           <button
             key={index}
@@ -45,30 +54,29 @@ export default function ProductImageGallery({ images, productName }: ProductImag
         ))}
       </div>
 
-      {/* Main Image with Zoom */}
+      {/* Main Image */}
       <div 
-        className="relative flex-1 aspect-square bg-white border rounded-lg overflow-hidden cursor-crosshair group z-10"
+        className="relative w-full aspect-square bg-white border rounded-lg overflow-hidden cursor-crosshair group z-10"
         onMouseEnter={() => setShowZoom(true)}
         onMouseLeave={() => setShowZoom(false)}
         onMouseMove={handleMouseMove}
       >
-        {/* Base Image */}
         <Image
           src={selectedImage}
           alt={productName}
           fill
-          className="object-contain p-4"
+          className="object-contain p-2"
           priority
         />
 
-        {/* Zoom Lens / Overlay (Shows on Hover) */}
+        {/* Zoom Overlay - Only visible on Desktop hover */}
         {showZoom && (
           <div 
             className="absolute inset-0 pointer-events-none hidden md:block"
             style={{
               backgroundImage: `url(${selectedImage})`,
               backgroundPosition: `${mousePosition.x}% ${mousePosition.y}%`,
-              backgroundSize: "200%", // 2x Zoom level
+              backgroundSize: "200%",
               backgroundRepeat: "no-repeat"
             }}
           />

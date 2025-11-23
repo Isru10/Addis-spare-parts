@@ -1,8 +1,7 @@
 // src/types/product.d.ts
 
-// 1. Define the shape of a single product variant
 export interface IVariant {
-  _id?: string; // Mongoose adds an _id to sub-documents
+  _id?: string;
   attributes: {
     name: string;
     value: string;
@@ -12,12 +11,17 @@ export interface IVariant {
   stock: number;
 }
 
-// 2. This is the FINAL, official IProduct interface
+// NEW: Define the shape of a Spec
+export interface IProductSpec {
+  name: string;
+  value: string | number;
+}
+
 export interface IProduct {
   _id: string;
   name: string;
   description: string;
-  category: string; // This will be the ObjectId string
+  category: string; // ObjectId string
   brand: string;
   modelCompatibility?: string[];
   yearRange?: {
@@ -25,9 +29,10 @@ export interface IProduct {
     end?: number;
   };
   
-  // This is the correct field to use for display purposes
+  // NEW: Add the specs field here
+  specs?: IProductSpec[];
+
   displayPrice: number;
-  
   variants: IVariant[];
   images: string[];
   relatedProducts?: string[];

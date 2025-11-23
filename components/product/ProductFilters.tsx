@@ -1,3 +1,4 @@
+// src/components/product/ProductFilters.tsx
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
@@ -10,28 +11,34 @@ import {
   AccordionContent, 
   AccordionItem, 
   AccordionTrigger 
-} from "../ui/accordion";
-
+} from "@/components/ui/accordion";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Search, X } from "lucide-react";
-import { ICategory } from "@/types/category"; // Using your specific type
-import { Checkbox } from "../ui/checkbox";
+import { Search, X, Sparkles } from "lucide-react"; // Sparkles icon
+import { ICategory } from "@/types/category";
+
+// New Interface for Dynamic Filters
+export interface DynamicFilterOption {
+  name: string; // e.g. "Voltage"
+  options: string[]; // e.g. ["12V", "24V"]
+}
 
 interface ProductFiltersProps {
   brands: string[];
   categories: ICategory[]; 
   maxPriceData: number;
+  dynamicFilters: DynamicFilterOption[]; // <-- NEW PROP
 }
 
-export default function ProductFilters({ brands, categories, maxPriceData }: ProductFiltersProps) {
+export default function ProductFilters({ brands, categories, maxPriceData, dynamicFilters }: ProductFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Local state for immediate UI feedback
+  // Local state
   const [priceRange, setPriceRange] = useState([0, maxPriceData]);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Sync local state with URL on load
+  // Sync state
   useEffect(() => {
     const min = Number(searchParams.get("minPrice")) || 0;
     const max = Number(searchParams.get("maxPrice")) || maxPriceData;
@@ -39,22 +46,19 @@ export default function ProductFilters({ brands, categories, maxPriceData }: Pro
     setSearchQuery(searchParams.get("q") || "");
   }, [searchParams, maxPriceData]);
 
-  // Helper to update URL
+  // Helper: Update URL
   const updateFilter = (key: string, value: string | number | null) => {
     const params = new URLSearchParams(searchParams.toString());
-    
     if (value === null || value === "") {
       params.delete(key);
     } else {
       params.set(key, String(value));
     }
-    
-    // Reset page to 1 whenever a filter changes
     params.set("page", "1");
     router.push(`/products?${params.toString()}`, { scroll: false });
   };
 
-  // Handle Checkbox Logic (Array of values)
+  // Helper: Toggle Array Filters (Categories, Brands, Specs)
   const toggleFilterArray = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
     const current = params.get(key)?.split(",") || [];
@@ -76,11 +80,8 @@ export default function ProductFilters({ brands, categories, maxPriceData }: Pro
     router.push(`/products?${params.toString()}`, { scroll: false });
   };
 
-  // Debounce price slider
-  const handlePriceChange = (value: number[]) => {
-    setPriceRange(value);
-  };
-  
+  // Price Handlers
+  const handlePriceChange = (value: number[]) => setPriceRange(value);
   const commitPriceChange = () => {
     const params = new URLSearchParams(searchParams.toString());
     params.set("minPrice", priceRange[0].toString());
@@ -91,7 +92,7 @@ export default function ProductFilters({ brands, categories, maxPriceData }: Pro
 
   return (
     <div className="space-y-6">
-      {/* Search Input */}
+      {/* Search */}
       <div className="relative">
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
@@ -100,9 +101,7 @@ export default function ProductFilters({ brands, categories, maxPriceData }: Pro
           className="pl-8"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") updateFilter("q", searchQuery);
-          }}
+          onKeyDown={(e) => { if (e.key === "Enter") updateFilter("q", searchQuery); }}
         />
       </div>
 
@@ -117,15 +116,14 @@ export default function ProductFilters({ brands, categories, maxPriceData }: Pro
         </Button>
       )}
 
-      <Accordion type="multiple" defaultValue={["category", "brand", "price"]} className="w-full">
+      <Accordion type="multiple" defaultValue={["category", "brand", "price", "specs"]} className="w-full">
         
-        {/* Categories */}
+        {/* 1. Categories */}
         <AccordionItem value="category">
           <AccordionTrigger>Categories</AccordionTrigger>
           <AccordionContent>
             <div className="space-y-2 pt-2">
               {categories.map((cat) => {
-                // We compare IDs here because the URL stores IDs
                 const isChecked = searchParams.get("category")?.split(",").includes(cat._id.toString());
                 return (
                   <div key={cat._id} className="flex items-center space-x-2">
@@ -134,7 +132,7 @@ export default function ProductFilters({ brands, categories, maxPriceData }: Pro
                       checked={isChecked}
                       onCheckedChange={() => toggleFilterArray("category", cat._id.toString())}
                     />
-                    <Label htmlFor={`cat-${cat._id}`} className="cursor-pointer">{cat.name}</Label>
+                    <Label htmlFor={`cat-${cat._id}`} className="cursor-pointer text-sm font-medium">{cat.name}</Label>
                   </div>
                 );
               })}
@@ -142,7 +140,43 @@ export default function ProductFilters({ brands, categories, maxPriceData }: Pro
           </AccordionContent>
         </AccordionItem>
 
-        {/* Brands */}
+        {/* 2. DYNAMIC SPECS (Only shows if a category implies them) */}
+        {dynamicFilters.length > 0 && (
+          <AccordionItem value="specs">
+             <AccordionTrigger className="text-primary font-semibold">
+               <span className="flex items-center gap-2"><Sparkles className="h-4 w-4" /> Specifics</span>
+             </AccordionTrigger>
+             <AccordionContent>
+                <div className="space-y-5 pt-2">
+                   {dynamicFilters.map((filter) => (
+                     <div key={filter.name} className="space-y-2">
+                       <h4 className="text-xs font-bold text-muted-foreground uppercase">{filter.name}</h4>
+                       <div className="grid grid-cols-1 gap-2">
+                         {filter.options.map((option) => {
+                           // We store specs in URL like: spec_Voltage=12V,24V
+                           const paramKey = `spec_${filter.name}`;
+                           const isChecked = searchParams.get(paramKey)?.split(",").includes(option);
+                           
+                           return (
+                             <div key={option} className="flex items-center space-x-2">
+                               <Checkbox 
+                                 id={`${filter.name}-${option}`} 
+                                 checked={isChecked}
+                                 onCheckedChange={() => toggleFilterArray(paramKey, option)}
+                               />
+                               <Label htmlFor={`${filter.name}-${option}`} className="text-sm font-normal">{option}</Label>
+                             </div>
+                           );
+                         })}
+                       </div>
+                     </div>
+                   ))}
+                </div>
+             </AccordionContent>
+          </AccordionItem>
+        )}
+
+        {/* 3. Brands */}
         <AccordionItem value="brand">
           <AccordionTrigger>Brands</AccordionTrigger>
           <AccordionContent>
@@ -164,7 +198,7 @@ export default function ProductFilters({ brands, categories, maxPriceData }: Pro
           </AccordionContent>
         </AccordionItem>
 
-        {/* Price Range */}
+        {/* 4. Price */}
         <AccordionItem value="price">
           <AccordionTrigger>Price Range</AccordionTrigger>
           <AccordionContent>
@@ -184,6 +218,7 @@ export default function ProductFilters({ brands, categories, maxPriceData }: Pro
             </div>
           </AccordionContent>
         </AccordionItem>
+
       </Accordion>
     </div>
   );
