@@ -75,13 +75,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  ShieldCheck, 
-  Truck, 
-  RotateCcw, 
-  Minus, 
-  Plus, 
-  ShoppingCart,
-  Check
+  ShieldCheck, Truck, RotateCcw, Minus, Plus, ShoppingCart
 } from "lucide-react";
 import ProductImageGallery from "@/components/product/ProductImageGallery";
 import { cn } from "@/lib/utils";
@@ -93,23 +87,18 @@ interface ProductClientPageProps {
 export default function ProductClientPage({ product }: ProductClientPageProps) {
   const dispatch = useAppDispatch();
   
-  // -- STATE --
   const [selectedVariant, setSelectedVariant] = useState<IVariant | undefined>(
     product.variants.length > 0 ? product.variants[0] : undefined
   );
   const [quantity, setQuantity] = useState(1);
-
-  // -- LOGIC: VARIANT GROUPING --
-  // We assume most variants share the same attribute structure (e.g. all have "Condition")
-  // We grab the first attribute name to create a "Chip" selector.
+  
+  // Logic to handle "Default" attribute display
   const primaryAttributeName = product.variants[0]?.attributes[0]?.name;
 
-  // -- HANDLERS --
   const handleQuantityChange = (delta: number) => {
     setQuantity((prev) => {
       const newVal = prev + delta;
       if (newVal < 1) return 1;
-      // Cap at stock if variant is selected
       if (selectedVariant && newVal > selectedVariant.stock) return selectedVariant.stock;
       return newVal;
     });
@@ -120,29 +109,24 @@ export default function ProductClientPage({ product }: ProductClientPageProps) {
       dispatch(addItem({ 
         product, 
         selectedVariant, 
-        quantity // Ensure your cartSlice handles an optional initial quantity, otherwise dispatch multiple times or update slice
+        quantity 
       }));
-      // In a real app, trigger a Toast here
     }
   };
 
-  // Determine pricing display
   const currentPrice = selectedVariant ? selectedVariant.price : product.displayPrice;
   const isOutOfStock = selectedVariant ? selectedVariant.stock === 0 : false;
 
   return (
     <div className="grid lg:grid-cols-2 gap-10 xl:gap-16">
       
-      {/* LEFT COLUMN: Gallery */}
-      <ProductImageGallery 
-        images={product.images} 
-        productName={product.name} 
-      />
+      {/* Gallery */}
+      <ProductImageGallery images={product.images} productName={product.name} />
 
-      {/* RIGHT COLUMN: Info & Actions */}
+      {/* Info */}
       <div className="flex flex-col gap-6">
         
-        {/* Header Section */}
+        {/* Header */}
         <div className="border-b pb-6 space-y-2">
           <div className="flex items-center gap-2">
              <Badge variant="outline" className="text-muted-foreground">{product.brand}</Badge>
@@ -157,17 +141,13 @@ export default function ProductClientPage({ product }: ProductClientPageProps) {
           </h1>
           
           <div className="flex items-end gap-3 mt-4">
-             <span className="text-3xl font-bold text-primary">
-               ${currentPrice.toFixed(2)}
-             </span>
+             <span className="text-3xl font-bold text-primary">${currentPrice.toFixed(2)}</span>
              <span className="text-sm text-muted-foreground mb-1">/ unit</span>
-             {isOutOfStock && (
-               <Badge variant="destructive" className="mb-1 ml-2">Out of Stock</Badge>
-             )}
+             {isOutOfStock && <Badge variant="destructive" className="mb-1 ml-2">Out of Stock</Badge>}
           </div>
         </div>
 
-        {/* Variant Selector */}
+        {/* Variant Selectors */}
         {product.variants.length > 1 && primaryAttributeName && (
           <div className="space-y-3">
             <span className="text-sm font-medium text-foreground">
@@ -175,16 +155,13 @@ export default function ProductClientPage({ product }: ProductClientPageProps) {
             </span>
             <div className="flex flex-wrap gap-3">
               {product.variants.map((variant) => {
-                const attrValue = variant.attributes[0]?.value || "Default";
+                const attrValue = variant.attributes[0]?.value || "Option";
                 const isSelected = selectedVariant?._id === variant._id;
                 
                 return (
                   <button
                     key={variant._id}
-                    onClick={() => {
-                      setSelectedVariant(variant);
-                      setQuantity(1); // Reset quantity on switch
-                    }}
+                    onClick={() => { setSelectedVariant(variant); setQuantity(1); }}
                     disabled={variant.stock === 0}
                     className={cn(
                       "px-4 py-2 rounded-md border text-sm font-medium transition-all relative overflow-hidden",
@@ -195,9 +172,7 @@ export default function ProductClientPage({ product }: ProductClientPageProps) {
                     )}
                   >
                     {attrValue}
-                    {isSelected && (
-                      <div className="absolute top-0 right-0 w-3 h-3 bg-primary transform translate-x-1.5 -translate-y-1.5 rotate-45" />
-                    )}
+                    {isSelected && <div className="absolute top-0 right-0 w-3 h-3 bg-primary transform translate-x-1.5 -translate-y-1.5 rotate-45" />}
                   </button>
                 );
               })}
@@ -205,97 +180,49 @@ export default function ProductClientPage({ product }: ProductClientPageProps) {
           </div>
         )}
 
-        {/* Quantity & Cart Actions */}
+        {/* Quantity & Actions */}
         <div className="space-y-4 pt-4">
           <div className="flex flex-wrap items-center gap-4">
-            {/* Stepper */}
             <div className="flex items-center border rounded-md">
-              <button 
-                onClick={() => handleQuantityChange(-1)}
-                disabled={quantity <= 1 || isOutOfStock}
-                className="p-3 hover:bg-muted disabled:opacity-50"
-              >
-                <Minus className="h-4 w-4" />
-              </button>
+              <button onClick={() => handleQuantityChange(-1)} disabled={quantity <= 1 || isOutOfStock} className="p-3 hover:bg-muted disabled:opacity-50"><Minus className="h-4 w-4" /></button>
               <span className="w-12 text-center font-medium">{quantity}</span>
-              <button 
-                onClick={() => handleQuantityChange(1)}
-                disabled={isOutOfStock || (selectedVariant && quantity >= selectedVariant.stock)}
-                className="p-3 hover:bg-muted disabled:opacity-50"
-              >
-                <Plus className="h-4 w-4" />
-              </button>
+              <button onClick={() => handleQuantityChange(1)} disabled={isOutOfStock || (selectedVariant && quantity >= selectedVariant.stock)} className="p-3 hover:bg-muted disabled:opacity-50"><Plus className="h-4 w-4" /></button>
             </div>
-
-            <span className="text-sm text-muted-foreground">
-              {selectedVariant ? `${selectedVariant.stock} available` : "Select options"}
-            </span>
+            <span className="text-sm text-muted-foreground">{selectedVariant ? `${selectedVariant.stock} available` : "Select options"}</span>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3">
-            <Button 
-              size="lg" 
-              className="flex-1 h-12 text-base" 
-              onClick={handleAddToCart} 
-              disabled={isOutOfStock || !selectedVariant}
-            >
-              <ShoppingCart className="mr-2 h-5 w-5" />
-              Add to Cart
+            <Button size="lg" className="flex-1 h-12 text-base" onClick={handleAddToCart} disabled={isOutOfStock || !selectedVariant}>
+              <ShoppingCart className="mr-2 h-5 w-5" /> Add to Cart
             </Button>
-            <Button variant="outline" size="lg" className="h-12">
-              Contact Supplier
-            </Button>
+            <Button variant="outline" size="lg" className="h-12">Contact Supplier</Button>
           </div>
         </div>
 
-        {/* Trust Badges (Alibaba Style) */}
+        {/* Trust Badges */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 py-6 border-y bg-muted/10 p-4 rounded-lg mt-2">
-           <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-full text-blue-600">
-                <ShieldCheck className="h-5 w-5" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-xs font-bold uppercase">Trade Assurance</span>
-                <span className="text-[10px] text-muted-foreground">Protects your order</span>
-              </div>
-           </div>
-           <div className="flex items-center gap-3">
-              <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-full text-orange-600">
-                <Truck className="h-5 w-5" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-xs font-bold uppercase">Fast Delivery</span>
-                <span className="text-[10px] text-muted-foreground">Local warehouses</span>
-              </div>
-           </div>
-           <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-full text-green-600">
-                <RotateCcw className="h-5 w-5" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-xs font-bold uppercase">7 Days Return</span>
-                <span className="text-[10px] text-muted-foreground">If goods damaged</span>
-              </div>
-           </div>
+           <div className="flex items-center gap-3"><div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-full text-blue-600"><ShieldCheck className="h-5 w-5" /></div><div className="flex flex-col"><span className="text-xs font-bold uppercase">Trade Assurance</span><span className="text-[10px] text-muted-foreground">Protects your order</span></div></div>
+           <div className="flex items-center gap-3"><div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-full text-orange-600"><Truck className="h-5 w-5" /></div><div className="flex flex-col"><span className="text-xs font-bold uppercase">Fast Delivery</span><span className="text-[10px] text-muted-foreground">Local warehouses</span></div></div>
+           <div className="flex items-center gap-3"><div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-full text-green-600"><RotateCcw className="h-5 w-5" /></div><div className="flex flex-col"><span className="text-xs font-bold uppercase">7 Days Return</span><span className="text-[10px] text-muted-foreground">If goods damaged</span></div></div>
         </div>
 
-        {/* Details Tabs */}
+        {/* TABS - Updated to show SPECS */}
         <Tabs defaultValue="desc" className="w-full mt-4">
           <TabsList className="w-full justify-start border-b rounded-none h-auto p-0 bg-transparent">
-            <TabsTrigger value="desc" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-2">
-              Description
-            </TabsTrigger>
-            <TabsTrigger value="specs" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-2">
-              Compatibility & Specs
-            </TabsTrigger>
+            <TabsTrigger value="desc" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-2">Description</TabsTrigger>
+            <TabsTrigger value="specs" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-2">Compatibility & Specs</TabsTrigger>
           </TabsList>
+          
           <TabsContent value="desc" className="pt-4 animate-in fade-in slide-in-from-bottom-2">
              <div className="prose dark:prose-invert max-w-none text-muted-foreground">
                <p className="whitespace-pre-line">{product.description}</p>
              </div>
           </TabsContent>
+          
           <TabsContent value="specs" className="pt-4 animate-in fade-in slide-in-from-bottom-2">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              
+              {/* 1. Vehicle Models */}
               <div className="border rounded-lg p-4">
                 <h4 className="font-semibold mb-2">Vehicle Compatibility</h4>
                 {product.modelCompatibility && product.modelCompatibility.length > 0 ? (
@@ -305,32 +232,40 @@ export default function ProductClientPage({ product }: ProductClientPageProps) {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground">Universal fit or see description.</p>
+                  <p className="text-sm text-muted-foreground">Universal fit or check description.</p>
                 )}
               </div>
+
+              {/* 2. Technical Specifications (Dynamic) */}
               <div className="border rounded-lg p-4">
-                 <h4 className="font-semibold mb-2">Specifications</h4>
+                 <h4 className="font-semibold mb-2">Technical Specifications</h4>
                  <ul className="text-sm space-y-2">
+                   {/* Always show Brand and SKU */}
                    <li className="flex justify-between border-b pb-1">
                      <span className="text-muted-foreground">Brand</span>
-                     <span>{product.brand}</span>
+                     <span className="font-medium">{product.brand}</span>
                    </li>
                    <li className="flex justify-between border-b pb-1">
                      <span className="text-muted-foreground">Part SKU</span>
-                     <span>{selectedVariant?.sku || product.variants[0].sku}</span>
+                     <span className="font-medium">{selectedVariant?.sku || product.variants[0].sku}</span>
                    </li>
-                   {selectedVariant?.attributes.map((attr, i) => (
-                      <li key={i} className="flex justify-between border-b pb-1">
-                        <span className="text-muted-foreground">{attr.name}</span>
-                        <span>{attr.value}</span>
-                      </li>
-                   ))}
+
+                   {/* DYNAMIC SPECS FROM ADMIN PANEL */}
+                   {product.specs && product.specs.length > 0 ? (
+                     product.specs.map((spec, i) => (
+                       <li key={i} className="flex justify-between border-b pb-1 last:border-0">
+                         <span className="text-muted-foreground">{spec.name}</span>
+                         <span className="font-medium">{spec.value}</span>
+                       </li>
+                     ))
+                   ) : (
+                     <li className="text-xs text-muted-foreground pt-2">No additional specs available.</li>
+                   )}
                  </ul>
               </div>
             </div>
           </TabsContent>
         </Tabs>
-
       </div>
     </div>
   );
