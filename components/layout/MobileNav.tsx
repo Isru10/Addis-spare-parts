@@ -101,7 +101,7 @@ export function MobileNav() {
       )}
 
       <SheetClose asChild>
-        <Link href="/about" className="text-lg font-medium hover:text-primary">
+        <Link href="/" className="text-lg font-medium hover:text-primary">
           About Us
         </Link>
       </SheetClose>
