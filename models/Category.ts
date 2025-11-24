@@ -18,6 +18,22 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+// =============== MAIN-----------============== 
+
+
+
+
 import mongoose, { Schema, models } from 'mongoose';
 
 const AttributeSchema = new Schema({
@@ -68,3 +84,7 @@ CategorySchema.pre('save', function(next) {
 });
 
 export default models.Category || mongoose.model("Category", CategorySchema);
+
+
+
+

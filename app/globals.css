@@ -120,3 +120,20 @@
     @apply bg-background text-foreground;
   }
 }
+
+
+@layer components {
+  .container {
+    /* Mobile: 16px padding on sides */
+    @apply px-4; 
+    /* Tablet: 32px padding */
+    @apply sm:px-8;
+    /* Laptop: 64px padding (This gives you that "Pro" whitespace) */
+    @apply md:px-16;
+    /* Large Screens: 96px padding */
+    @apply lg:px-24;
+    
+    /* Ensure it centers */
+    @apply mx-auto;
+  }
+}

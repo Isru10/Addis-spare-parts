@@ -71,22 +71,17 @@
 //   );
 // }
 
-
 "use client";
 
 import Image from "next/image";
 import Link from "next/link";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "../ui/button";
 import { IProduct } from "@/types/product";
 import { useAppDispatch } from "@/redux/hooks";
 import { addItem } from "@/redux/slices/cartSlice";
 import { ShoppingCart } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface ProductCardProps {
   product: IProduct;
@@ -98,72 +93,72 @@ export default function ProductCard({ product }: ProductCardProps) {
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault(); 
     if (product.variants.length > 0) {
-      // Add logic (default to first variant)
       const selectedVariant = product.variants[0];
-      const payload = {
+      dispatch(addItem({
         product: product,
         selectedVariant: selectedVariant
-      };
-      dispatch(addItem(payload));
+      }));
     }
   };
 
   return (
-    <Card className="group h-full flex flex-col border shadow-sm hover:shadow-md transition-all duration-200">
+    <Card className="group h-full flex flex-col border rounded-lg shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden bg-card">
       
-      {/* 1. Image Header - Tighter aspect ratio (Square) */}
-      <CardHeader className="p-0 relative aspect-square bg-muted/10 border-b">
-        <Link href={`/product/${product._id}`} className="block w-full h-full">
+      {/* 1. Image Header */}
+      <Link href={`/product/${product._id}`} className="block w-full">
+        <CardHeader className="p-0 relative aspect-square bg-muted/5 border-b">
           <Image
             src={product.images[0] || "/placeholder-product.png"}
             alt={product.name}
             fill
             sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
-            className="object-cover group-hover:scale-105 transition-transform duration-300"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
             loading="lazy"
           />
-        </Link>
-      </CardHeader>
+        </CardHeader>
+      </Link>
 
-      {/* 2. Content - Reduced Padding & Gaps */}
-      <CardContent className="p-2 flex flex-col gap-1 flex-grow">
-        
-        {/* Brand (Tiny) */}
-        <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">
+      {/* 2. Content */}
+      <CardContent className="p-2 flex flex-col gap-0.5 flex-grow">
+        <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider truncate leading-none mb-0.5">
           {product.brand}
         </p>
         
-        <Link href={`/product/${product._id}`}>
-          {/* Title - Clamped to 1 line to save vertical space */}
-          <h3 className="text-sm font-semibold leading-tight line-clamp-1 text-foreground">
+        <Link href={`/product/${product._id}`} className="block group/link space-y-0.5">
+          <h3 
+            className="text-xs sm:text-sm font-semibold text-foreground truncate h-5 leading-5 group-hover/link:text-primary transition-colors" 
+            title={product.name}
+          >
             {product.name}
           </h3>
-          
-          {/* Description - Clamped to 2 lines as requested */}
-          <p className="text-xs text-muted-foreground line-clamp-2 leading-snug mt-1">
+          <p className="text-[10px] text-muted-foreground truncate h-4 leading-4 block">
             {product.description}
           </p>
         </Link>
       </CardContent>
 
-      {/* 3. Footer - Compact */}
-      <CardFooter className="p-2 pt-0 flex items-center justify-between gap-2 mt-auto">
+      {/* 3. Footer */}
+      <CardFooter className="p-2 pt-0 flex items-end justify-between gap-1 mt-auto">
         <div className="flex flex-col">
-          <span className="text-[10px] text-muted-foreground leading-none">From</span>
-          <span className="text-sm sm:text-base font-bold text-primary leading-tight">
+          <span className="text-[9px] text-muted-foreground leading-none mb-0.5">From</span>
+          <span className="text-sm sm:text-base font-bold text-primary leading-none">
             ${product.displayPrice.toFixed(2)}
           </span>
         </div>
 
-        {/* Smaller Button */}
+        {/* FIX: Icon Only Button */}
         <Button 
           onClick={handleAddToCart} 
           disabled={product.variants.length === 0}
-          size="sm"
-          className="h-7 px-2 text-xs"
+          size="icon" // Using size="icon" base
+          className={cn(
+            "h-8 w-8 p-0 rounded-md shrink-0", // Fixed square size, no padding
+            "bg-primary hover:bg-primary/90 shadow-sm"
+          )}
+          title="Add to Cart"
         >
-          <ShoppingCart className="h-3 w-3 sm:mr-1" />
-          <span className="hidden sm:inline">Add</span>
+          <ShoppingCart className="h-4 w-4" />
+          <span className="sr-only">Add</span>
         </Button> 
       </CardFooter>
     </Card>

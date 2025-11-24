@@ -104,9 +104,9 @@
 // }
 
 
-
 "use client";
 
+import { Suspense } from "react"; // 1. Import Suspense
 import Image from "next/image";
 import Link from "next/link";
 import { useAppSelector, useAppDispatch } from "@/redux/hooks";
@@ -115,12 +115,13 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Trash2 } from "lucide-react";
 
-export default function CartPage() {
+// 2. Move the logic into a separate component or keep it here but wrapped
+function CartContent() {
   const dispatch = useAppDispatch();
   const cartItems = useAppSelector((state) => state.cart.items);
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const tax = subtotal * 0.05; // Example 5% tax
+  const tax = subtotal * 0.05; 
   const total = subtotal + tax;
 
   if (cartItems.length === 0) {
@@ -152,10 +153,8 @@ export default function CartPage() {
             </TableHeader>
             <TableBody>
               {cartItems.map((item) => (
-                // Moved or removed the comment to prevent hydration error
                 <TableRow key={item.sku}> 
                   <TableCell>
-                    {/* Added a div wrapper for flex behavior inside TD to be safe */}
                     <div className="flex items-center gap-4">
                       <Image 
                         src={item.image || '/placeholder-product.png'} 
@@ -212,5 +211,15 @@ export default function CartPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// 3. Default Export wraps content in Suspense
+export default function CartPage() {
+  return (
+    // The fallback handles the loading state while search params (if any) are resolved
+    <Suspense fallback={<div className="container py-12 text-center">Loading cart...</div>}>
+      <CartContent />
+    </Suspense>
   );
 }

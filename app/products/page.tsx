@@ -90,6 +90,7 @@
 // }
 
 
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import dbConnect from "@/lib/mongodb";
 import Product from "@/models/Product";
@@ -97,7 +98,7 @@ import Category from "@/models/Category";
 import { IProduct } from "@/types/product";
 import { ICategory } from "@/types/category";
 import ProductCard from "@/components/product/ProductCard";
-import ProductFilters, { DynamicFilterOption } from "@/components/product/ProductFilters";
+import CascadingPartFinder from "@/components/product/CascadingPartFinder"; // The new Finder Component
 import {
   Pagination,
   PaginationContent,
@@ -109,8 +110,6 @@ import {
 import { Filter } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-
-
 
 const PRODUCTS_PER_PAGE = 8;
 
@@ -130,8 +129,8 @@ export default async function ProductsPage({ searchParams }: SearchParamsProps) 
   const skip = (page - 1) * limit;
 
   const searchQuery = resolvedSearchParams.q?.toString() || "";
-  const categoryFilter = resolvedSearchParams.category?.toString().split(",").filter(Boolean) || [];
-  const brandFilter = resolvedSearchParams.brand?.toString().split(",").filter(Boolean) || [];
+  const categoryFilter = resolvedSearchParams.category?.toString() || "";
+  const brandFilter = resolvedSearchParams.brand?.toString() || "";
   const minPrice = Number(resolvedSearchParams.minPrice) || 0;
   const maxPrice = Number(resolvedSearchParams.maxPrice) || 100000;
 
@@ -150,8 +149,8 @@ export default async function ProductsPage({ searchParams }: SearchParamsProps) 
   }
 
   // Categories & Brands
-  if (categoryFilter.length > 0) query.category = { $in: categoryFilter };
-  if (brandFilter.length > 0) query.brand = { $in: brandFilter };
+  if (categoryFilter) query.category = categoryFilter;
+  if (brandFilter) query.brand = brandFilter;
 
   // Price
   if (resolvedSearchParams.minPrice || resolvedSearchParams.maxPrice) {
@@ -162,17 +161,17 @@ export default async function ProductsPage({ searchParams }: SearchParamsProps) 
   // Look for any params starting with "spec_" (e.g. spec_Voltage=12V)
   Object.keys(resolvedSearchParams).forEach((key) => {
     if (key.startsWith("spec_")) {
-      const specName = key.replace("spec_", ""); // "Voltage"
-      const values = resolvedSearchParams[key]?.toString().split(",") || [];
+      const specName = key.replace("spec_", ""); // e.g., "Voltage"
+      const value = resolvedSearchParams[key]?.toString();
       
-      if (values.length > 0) {
-        // Find products where 'specs' array contains an element with this name AND one of the values
+      if (value) {
+        // Find products where 'specs' array contains an element with this name AND value
         if (!query.$and) query.$and = [];
         query.$and.push({
           specs: {
             $elemMatch: {
               name: specName,
-              value: { $in: values }
+              value: value // Exact match
             }
           }
         });
@@ -191,70 +190,33 @@ export default async function ProductsPage({ searchParams }: SearchParamsProps) 
     .lean<IProduct[]>();
 
   const countPromise = Product.countDocuments(query);
-  const brandsPromise = Product.distinct("brand", { isActive: true });
   
-  const maxPricePromise = Product.findOne({ isActive: true })
-    .sort({ displayPrice: -1 })
-    .select("displayPrice");
-
-  // Fetch Categories for sidebar
+  // Fetch Categories for the finder
   const categoriesPromise = Category.find({ isActive: true }).sort({ name: 1 }).lean<ICategory[]>();
 
-  const [products, count, brands, maxPriceDoc, categoriesRaw] = await Promise.all([
+  const [productsRaw, count, categoriesRaw] = await Promise.all([
     productsPromise,
     countPromise,
-    brandsPromise,
-    maxPricePromise,
     categoriesPromise
   ]);
 
   // ==============================
-  // 4. GENERATE DYNAMIC FILTER OPTIONS
+  // 4. Data Normalization
   // ==============================
-  // Only generate specific filters if EXACTLY ONE category is selected.
-  // This prevents UI clutter when viewing "All Products".
-  let dynamicFilters: DynamicFilterOption[] = [];
+  // We MUST convert Mongoose objects (like ObjectIds) to plain strings/objects
+  // before passing them to Client Components.
   
-  if (categoryFilter.length === 1) {
-    const selectedCatId = categoryFilter[0];
-    const selectedCat = categoriesRaw.find(c => c._id.toString() === selectedCatId);
-    
-    if (selectedCat && selectedCat.attributes && selectedCat.attributes.length > 0) {
-      
-      // For each attribute defined in the category (e.g. "Voltage"),
-      // Find all distinct values currently available in products of this category
-      const filterPromises = selectedCat.attributes.map(async (attr) => {
-        // MongoDB Aggregation to find distinct spec values
-        const distinctValues = await Product.distinct("specs.value", { 
-          category: selectedCatId,
-          isActive: true,
-          "specs.name": attr.name
-        });
-        
-        return {
-          name: attr.name,
-          options: distinctValues.filter(Boolean).sort() // e.g. ["12V", "24V"]
-        };
-      });
-
-      const results = await Promise.all(filterPromises);
-      dynamicFilters = results.filter(f => f.options.length > 0);
-    }
-  }
-
-  // ==============================
-  // 5. Normalization & Render
-  // ==============================
-  const totalPages = Math.ceil(count / limit);
-  const maxPriceData = maxPriceDoc?.displayPrice || 5000;
-  
+  const products = JSON.parse(JSON.stringify(productsRaw));
   const categoriesCleaned = JSON.parse(JSON.stringify(categoriesRaw));
   
+  // Ensure strict typing for categories after parsing
   const categories = categoriesCleaned.map((cat: any) => ({
     ...cat,
-    // Ensure parentCategory is handled correctly if it exists
+    _id: cat._id.toString(),
     parentCategory: cat.parentCategory ? cat.parentCategory.toString() : undefined
   }));
+
+  const totalPages = Math.ceil(count / limit);
 
   const createPageUrl = (newPage: number) => {
     const params = new URLSearchParams(resolvedSearchParams as any);
@@ -268,76 +230,81 @@ export default async function ProductsPage({ searchParams }: SearchParamsProps) 
 
       <div className="flex flex-col lg:flex-row gap-8">
         
-        {/* Sidebar (Desktop) */}
-        <aside className="hidden lg:block w-64 flex-shrink-0">
-          <div className="sticky top-24 border rounded-lg p-4 bg-card">
-            <h2 className="font-semibold text-lg mb-4">Filters</h2>
-            <ProductFilters 
-              brands={brands as string[]} 
-              categories={categories as unknown as ICategory[]} // Cast to match interface
-              maxPriceData={maxPriceData}
-              dynamicFilters={dynamicFilters} // <--- Passing the magic
-            />
-          </div>
+        {/* Sidebar (Desktop) - Uses the new Cascading Finder */}
+        <aside className="hidden lg:block w-72 flex-shrink-0">
+            <CascadingPartFinder categories={categories as unknown as ICategory[]} />
         </aside>
 
         {/* Main Content */}
         <div className="flex-1">
           
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <p className="text-muted-foreground text-sm">
               Showing {products.length} of {count} results
             </p>
             
-            {/* Mobile Sidebar */}
+            {/* MOBILE FILTER TRIGGER */}
+            {/* The 'lg:hidden' class ensures it shows on Mobile/Tablet but hides on Large Desktop */}
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="outline" className="lg:hidden">
-                  <Filter className="mr-2 h-4 w-4" /> Filters
+                <Button variant="outline" className="lg:hidden w-full sm:w-auto">
+                  <Filter className="mr-2 h-4 w-4" /> Advanced Filter
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="w-[300px] sm:w-[400px] overflow-y-auto">
-                <SheetTitle className="font-semibold text-lg pt-4">Filters</SheetTitle>
-                <div className="py-6">
-                  <ProductFilters 
-                    brands={brands as string[]} 
-                    categories={categories as unknown as ICategory[]} 
-                    maxPriceData={maxPriceData}
-                    dynamicFilters={dynamicFilters}
-                  />
-                </div>
+                <SheetTitle className="text-lg font-bold mb-4">Filters</SheetTitle>
+                
+                {/* Render the Cascading Finder inside the Mobile Sheet */}
+                <CascadingPartFinder categories={categories as unknown as ICategory[]} />
+                
               </SheetContent>
             </Sheet>
           </div>
 
-          {/* Grid */}
+
+          {/* Product Grid */}
           {products.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {products.map((product) => (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3">
+              {products.map((product: IProduct) => (
                 <ProductCard
-                  key={product._id.toString()}
-                  product={JSON.parse(JSON.stringify(product))}
+                  key={product._id}
+                  product={product} // JSON.parse NOT needed here as 'products' array is already clean
                 />
               ))}
             </div>
+
           ) : (
             <div className="flex flex-col items-center justify-center py-24 border-2 border-dashed rounded-lg bg-muted/20">
               <p className="text-xl font-semibold">No products found</p>
-              <p className="text-muted-foreground mt-2">Try adjusting your filters.</p>
+              <p className="text-muted-foreground mt-2">Try adjusting your search in the Part Finder.</p>
               <Button variant="link" className="mt-4" asChild>
                 <a href="/products">Clear all filters</a>
               </Button>
             </div>
           )}
 
-          {/* Pagination */}
+          {/* Pagination Controls */}
           {totalPages > 1 && (
             <div className="mt-12">
               <Pagination>
                 <PaginationContent>
-                  {page > 1 && <PaginationItem><PaginationPrevious href={createPageUrl(page - 1)} /></PaginationItem>}
-                  <PaginationItem><PaginationLink isActive>Page {page} of {totalPages}</PaginationLink></PaginationItem>
-                  {page < totalPages && <PaginationItem><PaginationNext href={createPageUrl(page + 1)} /></PaginationItem>}
+                  {page > 1 && (
+                    <PaginationItem>
+                      <PaginationPrevious href={createPageUrl(page - 1)} />
+                    </PaginationItem>
+                  )}
+                  
+                  <PaginationItem>
+                    <PaginationLink isActive>
+                      Page {page} of {totalPages}
+                    </PaginationLink>
+                  </PaginationItem>
+
+                  {page < totalPages && (
+                    <PaginationItem>
+                      <PaginationNext href={createPageUrl(page + 1)} />
+                    </PaginationItem>
+                  )}
                 </PaginationContent>
               </Pagination>
             </div>
