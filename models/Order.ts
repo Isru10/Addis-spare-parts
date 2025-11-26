@@ -1,49 +1,60 @@
 // // src/models/Order.ts
-
-
 import mongoose, { Schema, models } from 'mongoose';
 
 const OrderSchema = new Schema({
-  user: {
-    type: Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
-  },
-  products: [{
+  userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  
+  // Cart Items Snapshot
+  items: [{
     product: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
-    variantSku: { type: String, required: true }, // Store the specific variant purchased
+    name: { type: String, required: true }, // Snapshot name
     quantity: { type: Number, required: true },
-    priceAtPurchase: { type: Number, required: true }, // Crucial: Lock in the price at the time of order
+    price: { type: Number, required: true }, // Snapshot price
+    variantSku: { type: String }
   }],
-  totalAmount: {
-    type: Number,
-    required: true,
+
+  totalAmount: { type: Number, required: true },
+
+  // --- NEW PAYMENT FIELDS ---
+  paymentMethod: { 
+    type: String, 
+    enum: ['Chapa', 'Bank Transfer'], 
+    required: true 
   },
-  // --- Shipping & Payment Info ---
-  shippingAddress: {
-    type: String,
-    required: true,
+  
+  // Chapa Transaction Ref (Unique, sparse allows nulls for Bank Transfers)
+  transactionReference: { 
+    type: String, 
+    unique: true, 
+    sparse: true 
   },
-  customerPhone: {
-    type: String,
-    required: true,
-  },
-  paymentScreenshotUrl: {
-    type: String,
-    required: [true, 'Payment screenshot is required for verification.'],
-  },
-  // --- Order Status and Admin Workflow ---
+
+  // For Manual Verification
+  paymentScreenshotUrl: { type: String },
+
+  // --- LIFECYCLE ---
   status: {
     type: String,
     enum: ['Pending Verification', 'Processing', 'On Route', 'Delivered', 'Cancelled'],
-    default: 'Pending Verification',
+    default: 'Pending Verification'
   },
+
+  shippingAddress: {
+    fullName: String,
+    phone: String,
+    city: String,
+    subCity: String,
+    woreda: String,
+    houseNumber: String,
+  },
+
+  // Audit Trail
   activityLog: [{
     adminId: { type: Schema.Types.ObjectId, ref: 'User' },
-    adminName: { type: String }, // Denormalized for easy display
-    action: { type: String, required: true }, // e.g., "Verified Payment", "Changed status to On Route"
-    timestamp: { type: Date, default: Date.now },
-  }],
+    action: String, // e.g. "Verified Payment", "Marked as Delivered"
+    timestamp: { type: Date, default: Date.now }
+  }]
+
 }, { timestamps: true });
 
-export default models.Order || mongoose.model("Order", OrderSchema);
+export default models.Order || mongoose.model('Order', OrderSchema);

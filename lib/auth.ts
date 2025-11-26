@@ -19,6 +19,17 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
   },
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token.addis-parts`, // UNIQUE NAME
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+  },
 
   // 3. SPECIFY CUSTOM CALLBACKS (NOW TYPE-SAFE)
   callbacks: {
