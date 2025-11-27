@@ -235,30 +235,40 @@ export default function Navbar() {
           </Link>
           
           {isAuthenticated ? (
-            <DropdownMenu>
+            
+            
+                        <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon">
                    <User className="h-6 w-6" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>{session.user.name}</DropdownMenuLabel>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                
+                {/* 1. Profile Link */}
                 <DropdownMenuItem asChild>
-                  <Link href="/profile">Profile</Link>
+                  <Link href="/profile" className="cursor-pointer">Profile</Link>
                 </DropdownMenuItem>
+                
+                {/* 2. NEW: Orders Link */}
+                <DropdownMenuItem asChild>
+                  <Link href="/orders" className="cursor-pointer">My Orders</Link>
+                </DropdownMenuItem>
+                
+                {/* Admin Links */}
                 {(session.user.role === 'admin' || session.user.role === 'superadmin') && (
-                  <DropdownMenuItem asChild>
-                    <Link href="/admin">Admin Dashboard</Link>
-                  </DropdownMenuItem>
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin">Admin Dashboard</Link>
+                    </DropdownMenuItem>
+                  </>
                 )}
-                {session.user.role === 'superadmin' && (
-                   <DropdownMenuItem asChild>
-                    <Link href="/superadmin">Super Admin</Link>
-                  </DropdownMenuItem>
-                )}
+                
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={() => signOut({ callbackUrl: '/' })}>
+                <DropdownMenuItem onSelect={() => signOut({ callbackUrl: '/' })} className="text-red-600 focus:text-red-600 cursor-pointer">
                   Logout
                 </DropdownMenuItem>
               </DropdownMenuContent>

@@ -245,19 +245,27 @@ export default async function ProductsPage({ searchParams }: SearchParamsProps) 
             
             {/* MOBILE FILTER TRIGGER */}
             {/* The 'lg:hidden' class ensures it shows on Mobile/Tablet but hides on Large Desktop */}
-            <Sheet>
+            
+                       <Sheet>
               <SheetTrigger asChild>
                 <Button variant="outline" className="lg:hidden w-full sm:w-auto">
                   <Filter className="mr-2 h-4 w-4" /> Advanced Filter
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[300px] sm:w-[400px] overflow-y-auto">
-                <SheetTitle className="text-lg font-bold mb-4">Filters</SheetTitle>
+              
+              {/* FIX STARTS HERE */}
+              <SheetContent side="left" className="w-[300px] sm:w-[400px] flex flex-col p-0">
+                {/* Header - Fixed at top */}
+                <div className="p-4 border-b">
+                  <SheetTitle className="text-lg font-bold">Filters</SheetTitle>
+                </div>
                 
-                {/* Render the Cascading Finder inside the Mobile Sheet */}
-                <CascadingPartFinder categories={categories as unknown as ICategory[]} />
-                
+                {/* Scrollable Area - Takes remaining height */}
+                <div className="flex-1 overflow-y-auto p-4">
+                  <CascadingPartFinder categories={categories as unknown as ICategory[]} />
+                </div>
               </SheetContent>
+              {/* FIX ENDS HERE */}
             </Sheet>
           </div>
 
@@ -284,31 +292,59 @@ export default async function ProductsPage({ searchParams }: SearchParamsProps) 
           )}
 
           {/* Pagination Controls */}
+          
+          
+          {/* Pagination Controls - UPDATED */}
           {totalPages > 1 && (
-            <div className="mt-12">
+            <div className="mt-12 flex justify-center">
               <Pagination>
-                <PaginationContent>
-                  {page > 1 && (
+                <PaginationContent className="flex-wrap gap-2 justify-center">
+                  
+                  {/* PREVIOUS BUTTON */}
+                  {page > 1 ? (
                     <PaginationItem>
-                      <PaginationPrevious href={createPageUrl(page - 1)} />
+                      <PaginationPrevious 
+                        href={createPageUrl(page - 1)} 
+                        className="w-auto px-4 h-10 cursor-pointer" // Allow auto width
+                      />
+                    </PaginationItem>
+                  ) : (
+                    <PaginationItem>
+                      {/* Disabled state visual */}
+                      <span className="flex items-center justify-center px-4 h-10 border rounded opacity-50 cursor-not-allowed text-sm font-medium">
+                        Previous
+                      </span>
                     </PaginationItem>
                   )}
                   
+                  {/* PAGE COUNTER (Not a button, just text) */}
                   <PaginationItem>
-                    <PaginationLink isActive>
+                    <span className="flex h-10 items-center justify-center px-4 text-sm font-semibold">
                       Page {page} of {totalPages}
-                    </PaginationLink>
+                    </span>
                   </PaginationItem>
 
-                  {page < totalPages && (
+                  {/* NEXT BUTTON */}
+                  {page < totalPages ? (
                     <PaginationItem>
-                      <PaginationNext href={createPageUrl(page + 1)} />
+                      <PaginationNext 
+                        href={createPageUrl(page + 1)} 
+                        className="w-auto px-4 h-10 cursor-pointer" // Allow auto width
+                      />
+                    </PaginationItem>
+                  ) : (
+                    <PaginationItem>
+                      <span className="flex items-center justify-center px-4 h-10 border rounded opacity-50 cursor-not-allowed text-sm font-medium">
+                        Next
+                      </span>
                     </PaginationItem>
                   )}
+
                 </PaginationContent>
               </Pagination>
             </div>
           )}
+          
         </div>
       </div>
     </div>

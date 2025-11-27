@@ -137,3 +137,10 @@
     @apply mx-auto;
   }
 }
+
+
+html {
+  /* This prevents the page from jumping when a modal/dropdown opens */
+  scrollbar-gutter: stable;
+}
+
