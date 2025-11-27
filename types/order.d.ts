@@ -1,35 +1,100 @@
+// // src/types/order.d.ts
+
+// export interface IOrderItem {
+//   product: string; // Product ID
+//   name: string;
+//   quantity: number;
+//   price: number;
+//   variantSku?: string;
+// }
+
+// export interface IOrderActivity {
+//   adminId?: string;
+//   action: string;
+//   timestamp: Date;
+// }
+
+// export interface IShippingAddress {
+//   fullName: string;
+//   phone: string;
+//   city: string;
+//   subCity: string;
+//   woreda?: string;
+//   houseNumber?: string;
+// }
+
+// export interface IOrder {
+//   _id: string;
+//   userId: string; // User ID
+//   items: IOrderItem[];
+//   totalAmount: number;
+  
+//   // New Payment Fields
+//   paymentMethod: 'Chapa' | 'Bank Transfer';
+//   transactionReference?: string;
+//   paymentScreenshotUrl?: string;
+  
+//   // Lifecycle
+//   status: 'Pending Verification' | 'Processing' | 'On Route' | 'Delivered' | 'Cancelled';
+  
+//   shippingAddress: IShippingAddress;
+//   activityLog: IOrderActivity[];
+  
+//   createdAt: string;
+//   updatedAt: string;
+// }
+
+
 // src/types/order.d.ts
 
-import { IUser } from "./next-auth";
-import { IProduct } from "./product";
-
-// Define the shape of the activity log entry
-interface IActivityLog {
-  adminId: string;
-  adminName: string;
-  action: string;
-  timestamp: string;
-}
-
-// Define the shape of the products within an order
-interface IOrderProduct {
-  product: IProduct; // We can use our existing product type
-  variantSku: string;
+export interface IOrderItem {
+  product: string; // Product ID
+  name: string;
   quantity: number;
-  priceAtPurchase: number;
+  price: number;
+  variantSku?: string;
 }
 
-// This is the main interface for our Order object
+export interface IOrderActivity {
+  adminId?: string;
+  action: string;
+  timestamp: Date;
+}
+
+export interface IShippingAddress {
+  fullName: string;
+  phone: string;
+  city: string;
+  subCity: string;
+  woreda?: string;
+  houseNumber?: string;
+}
+
+// 1. Helper interface for populated User
+export interface IOrderUser {
+  _id: string;
+  name: string;
+  email: string;
+}
+
 export interface IOrder {
   _id: string;
-  user: Pick<IUser, 'name' | 'email'>; // Populate user with just name and email
-  products: IOrderProduct[];
+  
+  // 2. userId can be a string OR a populated User object
+  userId: string | IOrderUser; 
+  
+  items: IOrderItem[];
   totalAmount: number;
-  shippingAddress: string;
-  customerPhone: string;
-  paymentScreenshotUrl: string;
+  
+  paymentMethod: 'Chapa' | 'Bank Transfer';
+  transactionReference?: string;
+  paymentScreenshotUrl?: string;
+  
   status: 'Pending Verification' | 'Processing' | 'On Route' | 'Delivered' | 'Cancelled';
-  activityLog: IActivityLog[];
+  
+  shippingAddress: IShippingAddress;
+  activityLog: IOrderActivity[];
+  
   createdAt: string;
   updatedAt: string;
 }
