@@ -106,7 +106,6 @@
 //   secret: process.env.NEXTAUTH_SECRET,
 // };
 
-
 import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import dbConnect from "@/lib/mongodb";
@@ -125,19 +124,9 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 Days
   },
-  
-  // Unique cookie to prevent localhost conflicts
-  cookies: {
-    sessionToken: {
-      name: `next-auth.session-token.addis-parts`, 
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: process.env.NODE_ENV === "production",
-      },
-    },
-  },
+
+  // --- REMOVED THE CUSTOM COOKIES BLOCK ---
+  // Standard NextAuth cookies work perfectly on Vercel and prevent Middleware loops.
 
   callbacks: {
     async signIn({ user, account }) {
@@ -151,7 +140,7 @@ export const authOptions: NextAuthOptions = {
           await User.create({
             email: user.email,
             name: user.name,
-            role: "user", // Explicit default
+            role: "user", 
           });
         }
         return true; 
@@ -161,32 +150,38 @@ export const authOptions: NextAuthOptions = {
       }
     },
 
-    // ---------------------------------------------------------
-    // THE FIX IS HERE: Robust JWT Update
-    // ---------------------------------------------------------
-    async jwt({ token, user, trigger, session }) {
-      // 1. Initial Login
+    // ROBUST JWT STRATEGY
+    async jwt({ token, user, trigger }) {
+      // 1. Initial Login: Populate token from User object
       if (user) {
-        await dbConnect();
-        const dbUser = await User.findOne({ email: user.email }).lean<IUser>();
-        if (dbUser) {
-          token.id = dbUser._id.toString();
-          token.role = dbUser.role;
+        // We can do a quick check here, but usually, the subsequent check handles it.
+        // However, to be safe on the very first render:
+        try {
+          await dbConnect();
+          const dbUser = await User.findOne({ email: user.email }).lean<IUser>();
+          if (dbUser) {
+            token.id = dbUser._id.toString();
+            token.role = dbUser.role;
+          }
+        } catch (error) {
+          console.error("Initial JWT Fetch Error", error);
         }
       }
 
-      // 2. Subsequent Requests (The "Robust" Part)
-      // Every time the user navigates, we quickly check if their role changed.
-      // This allows you to promote/demote users in Atlas instantly.
-      if (token.email) {
-         // Optimization: You could add a timestamp check here to only re-fetch 
-         // every 60 seconds if DB load is a concern, but for <10k users, this is fine.
-         await dbConnect();
-         const freshUser = await User.findOne({ email: token.email }).select("role _id").lean<IUser>();
-         
-         if (freshUser) {
-           token.role = freshUser.role; // Update the stale token with fresh DB data
-           token.id = freshUser._id.toString();
+      // 2. Subsequent Requests: Re-fetch role to ensure it's up to date
+      // We wrap this in try/catch so a database blip doesn't log the user out
+      if (!user && token.email) {
+         try {
+           await dbConnect();
+           const freshUser = await User.findOne({ email: token.email }).select("role _id").lean<IUser>();
+           
+           if (freshUser) {
+             token.role = freshUser.role; 
+             token.id = freshUser._id.toString();
+           }
+         } catch (error) {
+           console.error("JWT Refresh Error", error);
+           // If DB fails, we keep the old token data so the user stays logged in
          }
       }
 
