@@ -1,13 +1,119 @@
-// src/lib/auth.ts
+// // src/lib/auth.ts
+
+// import { NextAuthOptions } from "next-auth";
+// import GoogleProvider from "next-auth/providers/google";
+// import dbConnect from "@/lib/mongodb";
+// import User from "@/models/User";
+// import { IUser } from "@/types/next-auth"; // Assumes you created the type definition file
+
+// export const authOptions: NextAuthOptions = {
+//   // 1. CONFIGURE AUTHENTICATION PROVIDERS
+//   providers: [
+//     GoogleProvider({
+//       clientId: process.env.GOOGLE_CLIENT_ID as string,
+//       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+//     }),
+//   ],
+
+//   // 2. DEFINE THE SESSION STRATEGY
+//   session: {
+//     strategy: "jwt",
+//   },
+//   cookies: {
+//     sessionToken: {
+//       name: `next-auth.session-token.addis-parts`, // UNIQUE NAME
+//       options: {
+//         httpOnly: true,
+//         sameSite: "lax",
+//         path: "/",
+//         secure: process.env.NODE_ENV === "production",
+//       },
+//     },
+//   },
+
+//   // 3. SPECIFY CUSTOM CALLBACKS (NOW TYPE-SAFE)
+//   callbacks: {
+//     /**
+//      * This callback is called whenever a user successfully signs in.
+//      * We connect to the DB and create a new user if they don't exist.
+//      */
+//     async signIn({ user, account, profile }) {
+//       if (account?.provider !== "google") {
+//         return false; // Only allow Google provider
+//       }
+
+//       try {
+//         await dbConnect();
+//         const existingUser = await User.findOne({ email: user.email });
+
+//         if (!existingUser) {
+//           await User.create({
+//             email: user.email,
+//             name: user.name,
+//             // phone defaults to "" and role defaults to "user" via the schema
+//           });
+//         }
+//         return true; // Allow the sign-in
+//       } catch (error) {
+//         console.error("Error in signIn callback:", error);
+//         return false; // Prevent sign-in on error
+//       }
+//     },
+
+//     /**
+//      * This callback is called whenever a JWT is created or updated.
+//      * We enrich the token with the user's database ID and role.
+//      */
+//     async jwt({ token, user }) {
+//       if (user) {
+//         // This is the initial sign-in
+//         await dbConnect();
+//         // Tell lean() what shape the returned object will have
+//         const dbUser = await User.findOne({ email: user.email }).lean<IUser>();
+
+//         if (dbUser) {
+//           // Now TypeScript knows that dbUser has _id and role
+//           token.id = dbUser._id.toString();
+//           token.role = dbUser.role;
+          
+//         }
+//       }
+//       return token;
+//     },
+
+//     /**
+//      * This callback is called whenever a session is checked.
+//      * We transfer the custom data (id, role) from the token to the
+//      * client-side session object.
+//      */
+//     async session({ session, token }) {
+//       if (token && session.user) {
+//         // Our custom type declarations ensure this is type-safe
+//         session.user.id = token.id;
+//         session.user.role = token.role;
+//       }
+//       return session;
+//     },
+//   },
+
+//   // 4. DEFINE CUSTOM PAGES (OPTIONAL, BUT GOOD PRACTICE)
+//   pages: {
+//     signIn: '/login', // Redirect users to /login if they need to sign in
+//     // error: '/auth/error', // A page to handle authentication errors
+//   },
+
+//   // 5. ADD THE SECRET
+//   secret: process.env.NEXTAUTH_SECRET,
+// };
+
 
 import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
-import { IUser } from "@/types/next-auth"; // Assumes you created the type definition file
+import { IUser } from "@/types/next-auth"; 
 
 export const authOptions: NextAuthOptions = {
-  // 1. CONFIGURE AUTHENTICATION PROVIDERS
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID as string,
@@ -15,13 +121,15 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
 
-  // 2. DEFINE THE SESSION STRATEGY
   session: {
     strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 Days
   },
+  
+  // Unique cookie to prevent localhost conflicts
   cookies: {
     sessionToken: {
-      name: `next-auth.session-token.addis-parts`, // UNIQUE NAME
+      name: `next-auth.session-token.addis-parts`, 
       options: {
         httpOnly: true,
         sameSite: "lax",
@@ -31,16 +139,9 @@ export const authOptions: NextAuthOptions = {
     },
   },
 
-  // 3. SPECIFY CUSTOM CALLBACKS (NOW TYPE-SAFE)
   callbacks: {
-    /**
-     * This callback is called whenever a user successfully signs in.
-     * We connect to the DB and create a new user if they don't exist.
-     */
-    async signIn({ user, account, profile }) {
-      if (account?.provider !== "google") {
-        return false; // Only allow Google provider
-      }
+    async signIn({ user, account }) {
+      if (account?.provider !== "google") return false;
 
       try {
         await dbConnect();
@@ -50,45 +151,50 @@ export const authOptions: NextAuthOptions = {
           await User.create({
             email: user.email,
             name: user.name,
-            // phone defaults to "" and role defaults to "user" via the schema
+            role: "user", // Explicit default
           });
         }
-        return true; // Allow the sign-in
+        return true; 
       } catch (error) {
         console.error("Error in signIn callback:", error);
-        return false; // Prevent sign-in on error
+        return false; 
       }
     },
 
-    /**
-     * This callback is called whenever a JWT is created or updated.
-     * We enrich the token with the user's database ID and role.
-     */
-    async jwt({ token, user }) {
+    // ---------------------------------------------------------
+    // THE FIX IS HERE: Robust JWT Update
+    // ---------------------------------------------------------
+    async jwt({ token, user, trigger, session }) {
+      // 1. Initial Login
       if (user) {
-        // This is the initial sign-in
         await dbConnect();
-        // Tell lean() what shape the returned object will have
         const dbUser = await User.findOne({ email: user.email }).lean<IUser>();
-
         if (dbUser) {
-          // Now TypeScript knows that dbUser has _id and role
           token.id = dbUser._id.toString();
           token.role = dbUser.role;
-          
         }
       }
+
+      // 2. Subsequent Requests (The "Robust" Part)
+      // Every time the user navigates, we quickly check if their role changed.
+      // This allows you to promote/demote users in Atlas instantly.
+      if (token.email) {
+         // Optimization: You could add a timestamp check here to only re-fetch 
+         // every 60 seconds if DB load is a concern, but for <10k users, this is fine.
+         await dbConnect();
+         const freshUser = await User.findOne({ email: token.email }).select("role _id").lean<IUser>();
+         
+         if (freshUser) {
+           token.role = freshUser.role; // Update the stale token with fresh DB data
+           token.id = freshUser._id.toString();
+         }
+      }
+
       return token;
     },
 
-    /**
-     * This callback is called whenever a session is checked.
-     * We transfer the custom data (id, role) from the token to the
-     * client-side session object.
-     */
     async session({ session, token }) {
       if (token && session.user) {
-        // Our custom type declarations ensure this is type-safe
         session.user.id = token.id;
         session.user.role = token.role;
       }
@@ -96,12 +202,9 @@ export const authOptions: NextAuthOptions = {
     },
   },
 
-  // 4. DEFINE CUSTOM PAGES (OPTIONAL, BUT GOOD PRACTICE)
   pages: {
-    signIn: '/login', // Redirect users to /login if they need to sign in
-    // error: '/auth/error', // A page to handle authentication errors
+    signIn: '/login', 
   },
 
-  // 5. ADD THE SECRET
   secret: process.env.NEXTAUTH_SECRET,
 };
