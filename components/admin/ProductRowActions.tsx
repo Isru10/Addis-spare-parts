@@ -26,7 +26,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { deleteProduct } from "@/app/admin/products/actions";
+import { deleteProduct } from "@/app/(admin)/admin/products/actions";
 
 interface ProductRowActionsProps {
   productId: string;
