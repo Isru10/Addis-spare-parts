@@ -237,7 +237,7 @@ import {
 } from "@/components/ui/accordion";
 import { Search, Loader2, RotateCcw, DollarSign, Filter, Check, ChevronRight } from "lucide-react";
 import { ICategory } from "@/types/category";
-import { getCategoryOptions, FilterOptions } from "@/app/products/actions";
+import { getCategoryOptions, FilterOptions } from "@/app/(shop)/products/actions";
 import { cn } from "@/lib/utils";
 
 interface CascadingPartFinderProps {

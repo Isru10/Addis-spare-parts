@@ -121,7 +121,6 @@
   }
 }
 
-
 @layer components {
   .container {
     /* Mobile: 16px padding on sides */
@@ -132,15 +131,20 @@
     @apply md:px-16;
     /* Large Screens: 96px padding */
     @apply lg:px-24;
-    
+
     /* Ensure it centers */
     @apply mx-auto;
   }
 }
-
 
 html {
   /* This prevents the page from jumping when a modal/dropdown opens */
   scrollbar-gutter: stable;
 }
 
+html, body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  position: relative;
+}

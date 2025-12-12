@@ -87,11 +87,15 @@ import { Badge } from "@/components/ui/badge";
 import dbConnect from "@/lib/mongodb";
 import Product from "@/models/Product";
 import Link from "next/link";
+
+import "@/models/Category";
+
 import Image from "next/image";
 import { PlusCircle } from "lucide-react";
 import { IProduct, IVariant } from "@/types/product"; // Added IVariant
 import { ICategory } from "@/types/category";
 import ProductRowActions from "@/components/admin/ProductRowActions"; 
+import Category from "@/models/Category";
 
 // Extended interface for populated data
 interface PopulatedProduct extends Omit<IProduct, 'category'> {

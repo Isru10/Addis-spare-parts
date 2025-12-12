@@ -27,8 +27,11 @@ import { useEffect, useState } from "react";
 import { CategoryNav } from "./CategoryNav"; 
 import { MobileNav } from "./MobileNav";
 import { SearchInput } from "./SearchInput"; // <--- Import
+import { usePathname } from "next/navigation";
 
 export default function Navbar() {
+
+  
   const { data: session, status } = useSession();
   const isAuthenticated = status === "authenticated";
   
@@ -121,6 +124,12 @@ export default function Navbar() {
                 {/* 2. NEW: Orders Link */}
                 <DropdownMenuItem asChild>
                   <Link href="/orders" className="cursor-pointer">My Orders</Link>
+                </DropdownMenuItem>
+
+
+                {/* 3. NEW: Custom Requests Link */}
+                <DropdownMenuItem asChild>
+                  <Link href="/profile/requests" className="cursor-pointer">Custom Requests</Link>
                 </DropdownMenuItem>
                 
                 {/* Admin Links */}

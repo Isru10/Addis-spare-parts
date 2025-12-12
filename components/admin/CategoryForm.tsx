@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { ICategory, ICategoryAttribute } from "@/types/category";
-import { createOrUpdateCategory } from "@/app/admin/categories/actions";
+import { createOrUpdateCategory } from "@/app/(admin)/admin/categories/actions";
 import { Plus, Trash2, X, Loader2 } from "lucide-react"; // Import Loader2
 import Image from "next/image";
 

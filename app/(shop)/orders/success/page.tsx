@@ -29,7 +29,7 @@ export default function OrderSuccessPage() {
 
       <div className="flex flex-col sm:flex-row gap-4">
         <Button asChild size="lg">
-          <Link href="/profile">
+          <Link href="/orders">
             <Package className="mr-2 h-4 w-4" /> View My Orders
           </Link>
         </Button>

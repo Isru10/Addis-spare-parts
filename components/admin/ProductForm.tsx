@@ -182,7 +182,7 @@ import { Switch } from "@/components/ui/switch";
 import { IProduct, IVariant } from "@/types/product";
 import { ICategory } from "@/types/category";
 import { PlusCircle, Trash2, X, Upload, Loader2, Sparkles } from "lucide-react"; // Added Sparkles icon
-import { createOrUpdateProduct } from "@/app/admin/products/actions";
+import { createOrUpdateProduct } from "@/app/(admin)/admin/products/actions";
 
 // Types
 interface FormState { success: boolean; message: string; }

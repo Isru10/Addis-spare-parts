@@ -94,7 +94,7 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, CheckCircle, Truck, PackageCheck, Ban, RefreshCw } from "lucide-react";
-import { verifyPayment, updateOrderStatus } from "@/app/admin/orders/actions";
+import { verifyPayment, updateOrderStatus } from "@/app/(admin)/admin/orders/actions";
 import { useRouter } from "next/navigation";
 
 export default function OrderActions({ order }: { order: any }) {
