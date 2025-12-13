@@ -12,6 +12,8 @@ import RequestActions from "@/components/admin/requests/RequestActions"; // We'l
 
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
+export const dynamic = "force-dynamic";
+
 
 const getStatusBadge = (status: string) => {
   switch (status) {

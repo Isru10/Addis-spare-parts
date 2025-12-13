@@ -70,6 +70,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye, ExternalLink } from "lucide-react";
 import OrderActions from "@/components/admin/OrderActions";
+export const dynamic = "force-dynamic";
 
 
 /* eslint-disable @typescript-eslint/no-explicit-any */

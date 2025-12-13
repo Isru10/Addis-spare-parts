@@ -97,6 +97,8 @@ import { ICategory } from "@/types/category";
 import ProductRowActions from "@/components/admin/ProductRowActions"; 
 import Category from "@/models/Category";
 
+export const dynamic = "force-dynamic";
+
 // Extended interface for populated data
 interface PopulatedProduct extends Omit<IProduct, 'category'> {
   category?: Pick<ICategory, '_id' | 'name'>;

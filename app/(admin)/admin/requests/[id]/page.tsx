@@ -10,6 +10,10 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Car, Calendar, User, FileText, DollarSign } from "lucide-react";
 import RequestActions from "@/components/admin/requests/RequestActions"; // Reuse the actions
 
+
+export const dynamic = "force-dynamic";
+
+
 async function getRequest(id: string) {
   await dbConnect();
   const req = await PartRequest.findById(id).populate("userId", "name email phone").lean();

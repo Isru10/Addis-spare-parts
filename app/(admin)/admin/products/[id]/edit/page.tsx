@@ -6,6 +6,9 @@ import { IProduct } from "@/types/product";
 import { ICategory } from "@/types/category";
 import { notFound } from "next/navigation";
 
+
+export const dynamic = "force-dynamic";
+
 // This function fetches both the specific product and all categories in parallel.
 async function getProductAndCategories(id: string) {
   await dbConnect();

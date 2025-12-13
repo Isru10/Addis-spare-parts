@@ -12,6 +12,7 @@ import RequestOrderActions from "@/components/admin/requests/RequestOrderActions
 import PartRequest from "@/models/PartRequest";
 import "@/models/PartRequest"
 
+export const dynamic = "force-dynamic";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 

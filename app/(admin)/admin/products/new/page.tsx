@@ -47,6 +47,9 @@ import dbConnect from "@/lib/mongodb";
 import Category from "@/models/Category";
 import { ICategory } from "@/types/category";
 
+
+export const dynamic = "force-dynamic";
+
 async function getCategories(): Promise<ICategory[]> {
   await dbConnect();
   

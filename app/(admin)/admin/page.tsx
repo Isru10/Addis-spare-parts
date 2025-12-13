@@ -5,6 +5,7 @@ import Order from "@/models/Order";
 import Product from "@/models/Product";
 import User from "@/models/User";
 import { BaggageClaim, BarChart4, ShoppingBag, UserCircle } from "lucide-react";
+export const dynamic = "force-dynamic";
 
 async function getStats() {
   await dbConnect();

@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 /* eslint-disable @typescript-eslint/no-explicit-any */
+export const dynamic = "force-dynamic";
 
 const getStatusColor = (status: string) => {
   switch (status) {

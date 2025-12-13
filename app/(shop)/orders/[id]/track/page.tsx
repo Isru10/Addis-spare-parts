@@ -5,6 +5,7 @@ import {
   Card, CardContent, CardHeader, CardTitle 
 } from "@/components/ui/card";
 import { CheckCircle2, Truck, Plane, Package, MapPin } from "lucide-react";
+export const dynamic = "force-dynamic";
 
 
 /* eslint-disable @typescript-eslint/no-explicit-any */

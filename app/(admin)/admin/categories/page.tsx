@@ -24,6 +24,8 @@ import Category from "@/models/Category";
 import { ICategory } from "@/types/category";
 import CategoriesClientPage from "./CategoriesClientPage";
 
+export const dynamic = "force-dynamic";
+
 async function getCategories() {
   await dbConnect();
   const categories = await Category.find({})

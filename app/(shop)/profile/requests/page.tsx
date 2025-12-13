@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Wrench, Calendar, ChevronRight, Clock } from "lucide-react";
 import RequestOfferDialog from "@/components/request/RequestOfferDialog";
 
+export const dynamic = "force-dynamic";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Status Badges
