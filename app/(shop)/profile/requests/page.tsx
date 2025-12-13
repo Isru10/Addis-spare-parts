@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Wrench, Calendar, ChevronRight, Clock } from "lucide-react";
 import RequestOfferDialog from "@/components/request/RequestOfferDialog";
+import "@/models/User";
 
 export const dynamic = "force-dynamic";
 

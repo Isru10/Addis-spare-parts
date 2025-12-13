@@ -11,6 +11,8 @@ import { Plane, Eye, PackageCheck } from "lucide-react";
 import RequestOrderActions from "@/components/admin/requests/RequestOrderActions";
 import PartRequest from "@/models/PartRequest";
 import "@/models/PartRequest"
+import "@/models/User";
+
 
 export const dynamic = "force-dynamic";
 

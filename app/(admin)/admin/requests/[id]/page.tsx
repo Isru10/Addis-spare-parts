@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Car, Calendar, User, FileText, DollarSign } from "lucide-react";
 import RequestActions from "@/components/admin/requests/RequestActions"; // Reuse the actions
+import "@/models/User";
 
 
 export const dynamic = "force-dynamic";

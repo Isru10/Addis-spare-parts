@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye, Clock, FileText, CheckCircle2, XCircle } from "lucide-react";
 import RequestActions from "@/components/admin/requests/RequestActions"; // We'll create this
-
+import "@/models/User";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export const dynamic = "force-dynamic";

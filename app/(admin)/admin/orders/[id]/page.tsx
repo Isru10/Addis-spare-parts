@@ -15,6 +15,8 @@ import {
   ArrowLeft, MapPin, CreditCard, Package, Calendar, User, Eye 
 } from "lucide-react";
 import OrderActions from "@/components/admin/OrderActions";
+import "@/models/User";
+
 export const dynamic = "force-dynamic";
 
 // Helper for status colors

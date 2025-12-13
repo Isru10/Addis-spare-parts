@@ -16,6 +16,8 @@ import {
   CreditCard,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import "@/models/User";
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export const dynamic = "force-dynamic";
 

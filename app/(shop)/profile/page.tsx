@@ -216,6 +216,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { User as UserIcon, Mail, Shield, Package } from "lucide-react";
+import "@/models/User";
 
 export default async function ProfilePage() {
   const user = await getCurrentUser();
