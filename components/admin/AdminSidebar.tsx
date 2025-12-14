@@ -14,7 +14,8 @@ import {
   ChevronDown,
   LogOut,
   Store,
-  Plane
+  Plane,
+  MessageSquare
 } from "lucide-react";
 import {
   Sidebar,
@@ -86,7 +87,7 @@ export function AdminSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
-              <SidebarMenuItem>
+              {/* <SidebarMenuItem>
                 <SidebarMenuButton asChild isActive={pathname === "/admin/requests/orders"}>
                   <Link href="/admin/requests/orders">
                     <Plane />
@@ -116,10 +117,64 @@ export function AdminSidebar() {
                     <span>Orders</span>
                   </Link>
                 </SidebarMenuButton>
-              </SidebarMenuItem>
+              </SidebarMenuItem> */}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+
+        {/* My group for orders and preorders */}
+
+         <Collapsible defaultOpen className="group/collapsible">
+          <SidebarGroup>
+            <SidebarGroupLabel asChild>
+              <CollapsibleTrigger>
+                Orders and Preorders
+                <ChevronDown className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180" />
+              </CollapsibleTrigger>
+            </SidebarGroupLabel>
+            <CollapsibleContent>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  
+                  {/* preorders */}
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={pathname.startsWith("/admin/requests/orders")}>
+                      <Link href="/admin/requests/orders">
+                        <Plane />
+                        <span>Preorders</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+
+                  {/* pre requests */}
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={pathname.startsWith("/admin/requests")}>
+                      <Link href="/admin/requests">
+                        <MessageSquare />
+                        <span>Special Requests</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+
+
+
+                    {/* orders */}
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={pathname.startsWith("/admin/orders")}>
+                      <Link href="/admin/orders">
+                      <ShoppingCart />
+
+                        <span>Orders</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </CollapsibleContent>
+          </SidebarGroup>
+        </Collapsible>
 
         {/* GROUP 2: Inventory (Collapsible) */}
         <Collapsible defaultOpen className="group/collapsible">
@@ -167,7 +222,7 @@ export function AdminSidebar() {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild isActive={pathname.startsWith("/superadmin")}>
-                  <Link href="/superadmin"> 
+                  <Link href="/admin/users"> 
                     <Users />
                     <span>Users</span>
                   </Link>

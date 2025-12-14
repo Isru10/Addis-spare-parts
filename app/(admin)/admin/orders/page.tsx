@@ -58,22 +58,33 @@
 //   );
 // }
 
+
+
+
 import Link from "next/link";
-import Image from "next/image";
 import dbConnect from "@/lib/mongodb";
 import Order from "@/models/Order";
+import "@/models/User"; // Ensure User model is registered
 import { 
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Eye, ExternalLink } from "lucide-react";
+import { Eye } from "lucide-react";
 import OrderActions from "@/components/admin/OrderActions";
+import AdminSearch from "@/components/admin/AdminSearch";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export const dynamic = "force-dynamic";
 
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
+const ITEMS_PER_PAGE = 10;
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -86,30 +97,60 @@ const getStatusColor = (status: string) => {
   }
 };
 
-async function getOrders() {
+async function getOrders(page: number, query: string) {
   await dbConnect();
-  // Populate user info if needed, but userId reference is usually enough for list
-  const orders = await Order.find({})
+  
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const filter: any = {};
+  if (query) {
+    filter.$or = [
+      { "shippingAddress.fullName": { $regex: query, $options: "i" } },
+      { "shippingAddress.phone": { $regex: query, $options: "i" } },
+      { transactionReference: { $regex: query, $options: "i" } } // Also search by Transaction ID
+    ];
+  }
+
+  const skip = (page - 1) * ITEMS_PER_PAGE;
+
+  const ordersPromise = Order.find(filter)
     .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(ITEMS_PER_PAGE)
     .lean();
-  return JSON.parse(JSON.stringify(orders));
+
+  const countPromise = Order.countDocuments(filter);
+
+  const [orders, count] = await Promise.all([ordersPromise, countPromise]);
+  
+  return {
+    orders: JSON.parse(JSON.stringify(orders)),
+    totalPages: Math.ceil(count / ITEMS_PER_PAGE)
+  };
 }
 
-export default async function AdminOrdersPage() {
-  const orders = await getOrders();
+interface PageProps {
+  searchParams: Promise<{ page?: string; q?: string }>;
+}
+
+export default async function AdminOrdersPage({ searchParams }: PageProps) {
+  const params = await searchParams;
+  const page = Number(params.page) || 1;
+  const query = params.q || "";
+
+  const { orders, totalPages } = await getOrders(page, query);
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Orders</h1>
-        <Button variant="outline">Export CSV</Button>
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Orders</h1>
+          <p className="text-muted-foreground">Manage standard inventory orders.</p>
+        </div>
+        <AdminSearch placeholder="Search name, phone, or ref..." />
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Recent Orders</CardTitle>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
@@ -123,6 +164,7 @@ export default async function AdminOrdersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
               {orders.map((order: any) => (
                 <TableRow key={order._id}>
                   <TableCell className="font-mono text-xs">
@@ -160,15 +202,46 @@ export default async function AdminOrdersPage() {
                     {new Date(order.createdAt).toLocaleDateString()}
                   </TableCell>
                   <TableCell className="text-right">
-                    {/* Client Component for Interactions */}
                     <OrderActions order={order} />
                   </TableCell>
                 </TableRow>
               ))}
+              {orders.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={7} className="h-24 text-center">
+                    No orders found.
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex justify-center">
+          <Pagination>
+            <PaginationContent>
+              {page > 1 ? (
+                <PaginationItem>
+                  <PaginationPrevious href={`?page=${page - 1}&q=${query}`} />
+                </PaginationItem>
+              ) : null}
+              
+              <PaginationItem>
+                <span className="px-4 text-sm font-medium">Page {page} of {totalPages}</span>
+              </PaginationItem>
+
+              {page < totalPages ? (
+                <PaginationItem>
+                  <PaginationNext href={`?page=${page + 1}&q=${query}`} />
+                </PaginationItem>
+              ) : null}
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
     </div>
   );
 }

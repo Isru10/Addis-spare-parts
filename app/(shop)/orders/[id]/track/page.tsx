@@ -5,6 +5,9 @@ import {
   Card, CardContent, CardHeader, CardTitle 
 } from "@/components/ui/card";
 import { CheckCircle2, Truck, Plane, Package, MapPin } from "lucide-react";
+import "@/models/PartRequest"
+
+
 export const dynamic = "force-dynamic";
 
 
