@@ -1,25 +1,31 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+
+
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import dbConnect from "@/lib/mongodb";
 import Order from "@/models/Order";
 import { getCurrentUser } from "@/lib/session";
 import { 
-  Card, 
-  CardContent, 
+  Card, CardContent, 
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
-  Package, 
-  MapPin, 
-  Calendar, 
-  CreditCard,
+  Package, MapPin, Calendar, CreditCard, ChevronRight
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import "@/models/User";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-export const dynamic = "force-dynamic";
+const ITEMS_PER_PAGE = 5; // Fewer items per page for user history feels cleaner
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -32,20 +38,41 @@ const getStatusColor = (status: string) => {
   }
 };
 
-async function getUserOrders(userId: string) {
+async function getUserOrders(userId: string, page: number) {
   await dbConnect();
-  const orders = await Order.find({ userId }).sort({ createdAt: -1 }).lean();
-  return JSON.parse(JSON.stringify(orders));
+  const skip = (page - 1) * ITEMS_PER_PAGE;
+
+  const ordersPromise = Order.find({ userId })
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(ITEMS_PER_PAGE)
+    .lean();
+
+  const countPromise = Order.countDocuments({ userId });
+
+  const [orders, count] = await Promise.all([ordersPromise, countPromise]);
+  
+  return {
+    orders: JSON.parse(JSON.stringify(orders)),
+    totalPages: Math.ceil(count / ITEMS_PER_PAGE)
+  };
 }
 
-export default async function OrdersPage() {
+interface PageProps {
+  searchParams: Promise<{ page?: string }>;
+}
+
+export default async function OrdersPage({ searchParams }: PageProps) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const orders = await getUserOrders(user.id);
+  const params = await searchParams;
+  const page = Number(params.page) || 1;
+
+  const { orders, totalPages } = await getUserOrders(user.id, page);
 
   return (
-    <div className="container py-8 md:py-12">
+    <div className="container py-8 md:py-12 max-w-4xl">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold flex items-center gap-2">
           <Package className="h-8 w-8" /> My Orders
@@ -71,79 +98,78 @@ export default async function OrdersPage() {
       ) : (
         <div className="space-y-6">
           {orders.map((order: any) => (
-            <Card key={order._id} className="overflow-hidden border shadow-sm">
-              {/* Order Header */}
-              <div className="bg-muted/40 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b">
-                <div className="space-y-1">
-                  <p className="text-sm font-medium">
-                    Order <span className="font-mono text-muted-foreground">#{order.transactionReference|| order._id}</span>
-                  </p>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Calendar className="h-3 w-3" />
-                    {new Date(order.createdAt).toLocaleDateString("en-US", { 
-                      year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-                    })}
+            <Link key={order._id} href={`/orders/${order._id}`} className="block group">
+              <Card className="overflow-hidden border shadow-sm group-hover:border-primary/50 transition-colors">
+                
+                {/* Order Header */}
+                <div className="bg-muted/40 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b">
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium flex items-center gap-2">
+                      Order <span className="font-mono text-muted-foreground">#{order.transactionReference?.substring(0,8) || order._id.substring(0,8)}</span>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </p>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Calendar className="h-3 w-3" />
+                      {new Date(order.createdAt).toLocaleDateString()}
+                    </div>
+                  </div>
+                  <div className="flex flex-col sm:items-end gap-1">
+                    <Badge className={getStatusColor(order.status)}>
+                      {order.status}
+                    </Badge>
+                    <p className="text-sm font-bold">ETB {order.totalAmount.toLocaleString()}</p>
                   </div>
                 </div>
-                <div className="flex flex-col sm:items-end gap-1">
-                  <Badge className={getStatusColor(order.status)}>
-                    {order.status}
-                  </Badge>
-                  <p className="text-sm font-bold">ETB {order.totalAmount.toLocaleString()}</p>
-                </div>
-              </div>
 
-              <CardContent className="p-4 sm:p-6">
-                {/* Items */}
-                <div className="space-y-4">
-                  {order.items.map((item: any, idx: number) => (
-                    <div key={idx} className="flex items-start gap-4">
-                      <div className="h-12 w-12 bg-muted rounded flex items-center justify-center shrink-0">
-                         <Package className="h-6 w-6 text-muted-foreground/30" />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-medium text-sm">{item.name}</h4>
-                        <div className="flex gap-4 mt-1 text-xs text-muted-foreground">
-                           <span>Qty: {item.quantity}</span>
-                           <span>Price: ETB {item.price}</span>
+                <CardContent className="p-4 sm:p-6">
+                  {/* Item Preview (First 2 Items) */}
+                  <div className="space-y-3">
+                    {order.items.slice(0, 2).map((item: any, idx: number) => (
+                      <div key={idx} className="flex items-center gap-3">
+                        <div className="h-10 w-10 bg-muted rounded flex items-center justify-center shrink-0">
+                           <Package className="h-5 w-5 text-muted-foreground/30" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-sm truncate">{item.name}</h4>
+                          <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
                         </div>
                       </div>
-                      <div className="text-sm font-medium">
-                        ETB {(item.price * item.quantity).toLocaleString()}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <Separator className="my-6" />
-
-                {/* Footer Info */}
-                <div className="grid sm:grid-cols-2 gap-6 text-sm">
-                  <div>
-                    <h5 className="font-semibold mb-2 flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
-                      <MapPin className="h-3 w-3" /> Shipping Details
-                    </h5>
-                    <div className="text-foreground/80 space-y-0.5 pl-5">
-                      <p>{order.shippingAddress.fullName}</p>
-                      <p>{order.shippingAddress.phone}</p>
-                      <p>{order.shippingAddress.subCity}, {order.shippingAddress.city}</p>
-                    </div>
+                    ))}
+                    {order.items.length > 2 && (
+                      <p className="text-xs text-muted-foreground pl-14">
+                        + {order.items.length - 2} more items...
+                      </p>
+                    )}
                   </div>
-                  <div>
-                    <h5 className="font-semibold mb-2 flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
-                      <CreditCard className="h-3 w-3" /> Payment Info
-                    </h5>
-                    <div className="text-foreground/80 pl-5">
-                      <p>{order.paymentMethod}</p>
-                      {order.paymentScreenshotUrl && (
-                        <a href={order.paymentScreenshotUrl} target="_blank" className="text-xs text-blue-600 hover:underline mt-1 block">View Receipt</a>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-8 flex justify-center">
+          <Pagination>
+            <PaginationContent>
+              {page > 1 ? (
+                <PaginationItem>
+                  <PaginationPrevious href={`?page=${page - 1}`} />
+                </PaginationItem>
+              ) : null}
+              
+              <PaginationItem>
+                <span className="px-4 text-sm font-medium">Page {page} of {totalPages}</span>
+              </PaginationItem>
+
+              {page < totalPages ? (
+                <PaginationItem>
+                  <PaginationNext href={`?page=${page + 1}`} />
+                </PaginationItem>
+              ) : null}
+            </PaginationContent>
+          </Pagination>
         </div>
       )}
     </div>

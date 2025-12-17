@@ -93,9 +93,10 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, CheckCircle, Truck, PackageCheck, Ban, RefreshCw } from "lucide-react";
+import { MoreHorizontal, CheckCircle, Truck, PackageCheck, Ban, RefreshCw, Eye } from "lucide-react";
 import { verifyPayment, updateOrderStatus } from "@/app/(admin)/admin/orders/actions";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function OrderActions({ order }: { order: any }) {
   const [isPending, startTransition] = useTransition();
@@ -128,6 +129,15 @@ export default function OrderActions({ order }: { order: any }) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
+
+
+        <DropdownMenuItem asChild>
+          <Link href={`/admin/orders/${order._id}`} className="cursor-pointer flex items-center">
+            <Eye className="mr-2 h-4 w-4" /> View Details
+          </Link>
+        </DropdownMenuItem>
+
+        <DropdownMenuSeparator />
         
         {/* ACTION: VERIFY PAYMENT (For BOTH Bank Transfer AND Stuck Chapa Orders) */}
         {order.status === "Pending Verification" && (

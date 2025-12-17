@@ -168,7 +168,14 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
               {orders.map((order: any) => (
                 <TableRow key={order._id}>
                   <TableCell className="font-mono text-xs">
-                    {order.transactionReference?.substring(0,8) || order._id.substring(0,8)}
+                    {/* {order.transactionReference?.substring(0,8) || order._id.substring(0,8)} */}
+
+                    <Link 
+                      href={`/admin/orders/${order._id}`} 
+                      className="text-blue-600 hover:underline font-bold"
+                    >
+                      {order.transactionReference?.substring(0,8) || order._id.substring(0,8)}
+                    </Link>
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col">

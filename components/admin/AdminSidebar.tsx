@@ -137,15 +137,6 @@ export function AdminSidebar() {
               <SidebarGroupContent>
                 <SidebarMenu>
                   
-                  {/* preorders */}
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={pathname.startsWith("/admin/requests/orders")}>
-                      <Link href="/admin/requests/orders">
-                        <Plane />
-                        <span>Preorders</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
 
                   {/* pre requests */}
                   <SidebarMenuItem>
@@ -153,6 +144,19 @@ export function AdminSidebar() {
                       <Link href="/admin/requests">
                         <MessageSquare />
                         <span>Special Requests</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+
+
+
+                  
+                  {/* preorders */}
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={pathname.startsWith("/admin/requests/orders")}>
+                      <Link href="/admin/requests/orders">
+                        <Plane />
+                        <span>Preorders</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
