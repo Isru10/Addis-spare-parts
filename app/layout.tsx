@@ -61,6 +61,9 @@ import { cn } from "@/lib/utils";
 import { ReduxProvider } from "@/redux/ReduxProvider";
 import CartPersistence from "@/redux/CartPersistence";
 import SessionProviderWrapper from "@/lib/SessionProviderWrapper";
+import NextTopLoader from "nextjs-toploader"; 
+
+
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -75,6 +78,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
+   
+
+
     <html lang="en" suppressHydrationWarning>
       <body
         className={cn(
@@ -82,12 +88,23 @@ export default function RootLayout({
           "mx-auto w-full max-w-[1920px] shadow-2xl" 
         )}
       >
+        {/* 2. ADD THE LOADER HERE */}
+        <NextTopLoader
+          color="#F37F37" // Your Brand Orange (High visibility)
+          initialPosition={0.08}
+          crawlSpeed={200}
+          height={3}
+          crawl={true}
+          showSpinner={false} // Disable the spinner (cleaner look)
+          easing="ease"
+          speed={200}
+          shadow="0 0 10px #F37F37,0 0 5px #F37F37"
+        />
+
         <SessionProviderWrapper> 
           <ReduxProvider> 
             <CartPersistence/>
-            {/* NO NAVBAR HERE */}
             {children}
-            {/* NO FOOTER HERE */}
           </ReduxProvider>
         </SessionProviderWrapper>
       </body>
