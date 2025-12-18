@@ -56,7 +56,7 @@ const ProductSchema = new Schema({
   description: { type: String, required: true },
   
   // Reference
-  category: { type: Schema.Types.ObjectId, ref: 'Category', required: true },
+  category: { type: Schema.Types.ObjectId, ref: 'Category', required: true, index:true },
   
   // NEW: Store the values for the Category-defined attributes here
   // Example: [{ name: "Material", value: "Ceramic" }, { name: "Position", value: "Front" }]
@@ -69,11 +69,22 @@ const ProductSchema = new Schema({
   modelCompatibility: { type: [String], default: [] },
   yearRange: { start: Number, end: Number },
   
-  displayPrice: { type: Number, required: true },
+  displayPrice: { type: Number, required: true, index:1 },
   
   variants: [VariantSchema],
   images: { type: [String], default: [] },
-  isActive: { type: Boolean, default: true },
+  isActive: { type: Boolean, default: true, index:true },
 }, { timestamps: true });
+
+
+// 1. Text Search Index (CRITICAL for Search Bar)
+// Allows searching "Toyota Brake Pad" instantly
+ProductSchema.index({ name: 'text', brand: 'text', modelCompatibility: 'text' });
+
+
+// 2. Sort Index (Newest First)
+ProductSchema.index({ createdAt: -1 });
+
+
 
 export default models.Product || mongoose.model("Product", ProductSchema);

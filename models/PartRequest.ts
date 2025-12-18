@@ -2,7 +2,7 @@
 import mongoose, { Schema, models } from 'mongoose';
 
 const PartRequestSchema = new Schema({
-  userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index:true },
   
   // 1. Precise Vehicle Identity
   vehicleDetails: {
@@ -41,7 +41,8 @@ const PartRequestSchema = new Schema({
   status: {
     type: String,
     enum: ['Pending Review', 'Searching', 'Quoted', 'Rejected', 'Ordered', 'Completed'],
-    default: 'Pending Review'
+    default: 'Pending Review',
+    index:true
   }
 }, { timestamps: true });
 

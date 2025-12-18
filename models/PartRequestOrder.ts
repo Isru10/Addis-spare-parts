@@ -4,8 +4,8 @@ import mongoose, { Schema, models } from 'mongoose';
 
 const PartRequestOrderSchema = new Schema({
   // Link back to the original conversation
-  requestId: { type: Schema.Types.ObjectId, ref: 'PartRequest', required: true },
-  userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  requestId: { type: Schema.Types.ObjectId, ref: 'PartRequest', required: true, index:true },
+  userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index:true },
 
   // Financials
   totalAmount: { type: Number, required: true }, // Agreed price
@@ -18,7 +18,8 @@ const PartRequestOrderSchema = new Schema({
   logisticsStatus: {
     type: String,
     enum: ['Order Placed', 'Shipped to Warehouse', 'Customs Clearance', 'Ready for Pickup', 'Delivered'],
-    default: 'Order Placed'
+    default: 'Order Placed',
+    index:true
   },
   
   trackingNumber: { type: String }, // International tracking if applicable
@@ -30,4 +31,6 @@ const PartRequestOrderSchema = new Schema({
   }
 }, { timestamps: true });
 
+// Sort Index for Admin Dashboard (Newest Orders First)
+PartRequestOrderSchema.index({ createdAt: -1 });
 export default models.PartRequestOrder || mongoose.model("PartRequestOrder", PartRequestOrderSchema);

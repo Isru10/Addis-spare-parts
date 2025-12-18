@@ -61,6 +61,7 @@ const CategorySchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'Category',
     default: null,
+    index:true,
   },
 
   // These define WHAT attributes products in this category MUST have
@@ -69,7 +70,7 @@ const CategorySchema = new Schema({
     default: [],
   },
 
-  isActive: { type: Boolean, default: true },
+  isActive: { type: Boolean, default: true, index:true },
 }, { timestamps: true });
 
 // Auto-generate slug from name if not provided

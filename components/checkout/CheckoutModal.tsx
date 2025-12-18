@@ -114,7 +114,7 @@ export default function CheckoutModal({ open, setOpen }: CheckoutModalProps) {
         router.push("/orders/success"); // Redirect to profile/orders to see status
       } else {
         const errorData = await orderRes.json();
-        router.push("/orders/failure"); // Redirect to profile/orders to see status
+        router.push("/orders/failed"); // Redirect to profile/orders to see status
         alert("Order creation failed: " + errorData.error);
       }
 
@@ -260,3 +260,10 @@ export default function CheckoutModal({ open, setOpen }: CheckoutModalProps) {
     </Dialog>
   );
 }
+
+
+
+
+
+
+

@@ -2,7 +2,7 @@
 import mongoose, { Schema, models } from 'mongoose';
 
 const OrderSchema = new Schema({
-  userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index:true },
   
   // Cart Items Snapshot
   items: [{
@@ -36,7 +36,8 @@ const OrderSchema = new Schema({
   status: {
     type: String,
     enum: ['Pending Verification', 'Processing', 'On Route', 'Delivered', 'Cancelled'],
-    default: 'Pending Verification'
+    default: 'Pending Verification',
+    index:true
   },
 
   shippingAddress: {
@@ -56,5 +57,6 @@ const OrderSchema = new Schema({
   }]
 
 }, { timestamps: true });
+OrderSchema.index({ createdAt: -1 });
 
 export default models.Order || mongoose.model('Order', OrderSchema);
