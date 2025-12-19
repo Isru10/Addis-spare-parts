@@ -141,6 +141,19 @@ export default function Navbar() {
                     </DropdownMenuItem>
                   </>
                 )}
+
+
+
+                                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/insurer/dashboard" className="cursor-pointer flex items-center justify-between">
+                    <span>Partner Portal</span>
+                    {session.user.role === 'insurer' && <span className="text-xs bg-blue-100 text-blue-700 px-1.5 rounded">Pro</span>}
+                  </Link>
+                </DropdownMenuItem>
+                
+                <DropdownMenuSeparator />
+
                 
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onSelect={() => signOut({ callbackUrl: '/' })} className="text-red-600 focus:text-red-600 cursor-pointer">

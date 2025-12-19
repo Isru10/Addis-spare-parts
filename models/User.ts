@@ -18,7 +18,7 @@ const UserSchema = new Schema({
   },
   role: {
     type: String,
-    enum: ["user", "admin", "superadmin"],
+    enum: ["user", "admin", "superadmin","insurer"],
     default: "user",
   },
 }, { timestamps: true }); // timestamps adds createdAt and updatedAt fields

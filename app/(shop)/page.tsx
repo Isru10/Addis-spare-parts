@@ -53,7 +53,9 @@ import { Suspense } from "react";
 import HeroSection from "@/components/home/HeroSection";
 import FeaturedProducts from "@/components/home/FeaturedProducts";
 import CategoryShowcase from "@/components/home/CategoryShowcase"; // The new component
-import { ShieldCheck, Truck, Clock, CreditCard } from "lucide-react";
+import { ShieldCheck, Truck, Clock, CreditCard, Building2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 // Loading Skeletons
@@ -118,6 +120,36 @@ export default function HomePage() {
            </Suspense>
          </div>
       </section>
+
+ <section className="container">
+        <div className=" rounded-2xl p-8 md:p-12  flex flex-col md:flex-row items-center justify-between gap-8 shadow-xl">
+          <div className="space-y-4 max-w-2xl">
+            <div className="flex items-center gap-3 ">
+              <Building2 className="h-6 w-6" />
+              <span className="font-semibold tracking-wide uppercase text-xs">For Insurance Companies</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold leading-tight">
+              Streamline Your Claims Process
+            </h2>
+            <p className=" text-lg">
+              Partner with us for verified market quotations, genuine parts supply, and digital proforma management. Reduce fraud and speed up settlements.
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-4 shrink-0">
+            <Button asChild size="lg" className=" hover:bg-blue-50 hover:text-black font-bold h-12 px-8">
+              <Link href="/insurer/register">
+                Register as Partner
+              </Link>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="border-blue-400 hover:bg-blue-800 hover:text-white h-12 px-8">
+              <Link href="/about">Learn More</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+
+
     </div>
   );
 }
