@@ -1,34 +1,34 @@
 // src/components/home/FeaturedProducts.tsx
-
+import Link from "next/link";
 import dbConnect from "@/lib/mongodb";
 import Product from "@/models/Product";
-import ProductCard from "../product/ProductCard";
-import { IProduct } from "@/types/product"; // <-- IMPORT the new type
+import ProductCard from "@/components/product/ProductCard";
+import { IProduct } from "@/types/product";
+
+async function getFeaturedProducts() {
+  await dbConnect();
+  // Fetch 10 featured items (sorted by price or specific 'featured' flag)
+  const products = await Product.find({ isActive: true })
+    .sort({ displayPrice: -1 }) // or createdAt: -1
+    .limit(10) // Fetch 10 items
+    .lean<IProduct[]>();
+  
+  return JSON.parse(JSON.stringify(products));
+}
 
 export default async function FeaturedProducts() {
-  await dbConnect();
+  const products = await getFeaturedProducts();
 
-  // Tell lean() to return objects matching the IProduct shape
-  const featuredProducts = await Product.find({})
-    .sort({ createdAt: -1 })
-    .limit(4)
-    .lean<IProduct[]>(); // <-- APPLY THE TYPE HERE
+  if (products.length === 0) {
+    return <p className="text-center text-muted-foreground">No featured products available.</p>;
+  }
 
   return (
-    <section className="container py-12 md:py-24">
-      <h2 className="text-2xl md:text-3xl font-bold text-center mb-8">
-        Featured Products
-      </h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {featuredProducts.map((product) => (
-          // The JSON hack is still important! It converts the MongoDB ObjectId (_id)
-          // and dates into simple strings that can be passed from a Server Component to a Client Component.
-          <ProductCard
-            key={product._id.toString()}
-            product={JSON.parse(JSON.stringify(product))}
-          />
-        ))}
-      </div>
-    </section>
+    // FIX: grid-cols-2 on mobile ensures 2 items per row
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-6">
+      {products.map((product: IProduct) => (
+        <ProductCard key={product._id} product={product} />
+      ))}
+    </div>
   );
 }

@@ -79,7 +79,7 @@ export default function Navbar() {
           <nav className="flex items-center gap-4 text-sm font-medium">
             <Link href="/" className="hover:text-foreground/80 transition-colors">Home</Link>
             <CategoryNav />
-            <Link href="/" className="hover:text-foreground/80 transition-colors">About Us</Link>
+            <Link href="/about" className="hover:text-foreground/80 transition-colors">About Us</Link>
           </nav>
 
           {/* REPLACED HARDCODED INPUT WITH COMPONENT */}

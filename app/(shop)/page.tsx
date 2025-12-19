@@ -56,6 +56,7 @@ import CategoryShowcase from "@/components/home/CategoryShowcase"; // The new co
 import { ShieldCheck, Truck, Clock, CreditCard, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import PopularModels from "@/components/home/PopularModels";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 // Loading Skeletons
@@ -88,38 +89,11 @@ export default function HomePage() {
       {/* 1. Hero Carousel */}
       <HeroSection />
 
-      {/* 2. Trust Strip (Why Choose Us) */}
-      <section className="container">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 p-6 rounded-xl border bg-card shadow-sm">
-          <FeatureItem icon={Truck} title="Fast Delivery" desc="Within Addis Ababa" />
-          <FeatureItem icon={ShieldCheck} title="Genuine Parts" desc="Quality Guaranteed" />
-          <FeatureItem icon={Clock} title="24/7 Support" desc="Expert Assistance" />
-          <FeatureItem icon={CreditCard} title="Secure Payment" desc="Safe Transactions" />
-        </div>
-      </section>
+       <PopularModels />
+{/* insurance part */}
 
-      {/* 3. Featured Products */}
-      <section className="container">
-        <div className="flex items-center justify-between mb-8">
-           <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Featured Products</h2>
-           <a href="/products" className="text-sm font-semibold text-primary hover:underline">View All &rarr;</a>
-        </div>
-        <Suspense fallback={<ProductGridSkeleton />}>
-          <FeaturedProducts />
-        </Suspense>
-      </section>
 
-      {/* 4. Shop by Category */}
-      <section id="categories" className="py-12 bg-muted/30 border-y">
-         <div className="container">
-           <h2 className="text-2xl md:text-3xl font-bold text-center mb-10">
-             Shop by Category
-           </h2>
-           <Suspense fallback={<CategoryGridSkeleton />}>
-             <CategoryShowcase />
-           </Suspense>
-         </div>
-      </section>
+
 
  <section className="container">
         <div className=" rounded-2xl p-8 md:p-12  flex flex-col md:flex-row items-center justify-between gap-8 shadow-xl">
@@ -150,6 +124,44 @@ export default function HomePage() {
 
 
 
+
+
+
+      {/* 3. Featured Products */}
+      <section className="container">
+        <div className="flex items-center justify-between mb-8">
+           <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Featured Products</h2>
+           <a href="/products" className="text-sm font-semibold text-primary hover:underline">View All &rarr;</a>
+        </div>
+        <Suspense fallback={<ProductGridSkeleton />}>
+          <FeaturedProducts />
+        </Suspense>
+      </section>
+
+      {/* 4. Shop by Category */}
+      <section id="categories" className="py-12 bg-muted/30 border-y">
+         <div className="container">
+           <h2 className="text-2xl md:text-3xl font-bold text-center mb-10">
+             Shop by Category
+           </h2>
+           <Suspense fallback={<CategoryGridSkeleton />}>
+             <CategoryShowcase />
+           </Suspense>
+         </div>
+      </section>
+
+
+
+
+ {/* 2. Trust Strip (Why Choose Us) */}
+      <section className="container">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 p-6 rounded-xl border bg-card shadow-sm">
+          <FeatureItem icon={Truck} title="Fast Delivery" desc="Within Addis Ababa" />
+          <FeatureItem icon={ShieldCheck} title="Genuine Parts" desc="Quality Guaranteed" />
+          <FeatureItem icon={Clock} title="24/7 Support" desc="Expert Assistance" />
+          <FeatureItem icon={CreditCard} title="Secure Payment" desc="Safe Transactions" />
+        </div>
+      </section>
     </div>
   );
 }
