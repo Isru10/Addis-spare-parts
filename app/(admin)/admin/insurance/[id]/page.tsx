@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, FileText, User } from "lucide-react";
 import InsuranceQuoteForm from "@/components/insurer/InsuranceQuoteForm";
 
+import "@/models/InsurerProfile"; // Register model
+
+
 
 async function getClaim(id: string) {
   await dbConnect();

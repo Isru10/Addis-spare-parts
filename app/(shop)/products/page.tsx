@@ -388,13 +388,23 @@ export default async function ProductsPage({ searchParams }: SearchParamsProps) 
             <FeaturedCarousel products={featuredProducts} />
           </section>
           
-          <section className="w-full overflow-hidden">
+          {/* <section className="w-full overflow-hidden">
             <ProductRow title="Just Arrived" products={recentProducts} />
           </section>
 
           <section className="w-full overflow-hidden">
             <ProductRow title="Best Sellers" products={topSoldProducts} />
+          </section> */}
+
+
+                    <section className="w-full overflow-hidden">
+            <ProductRow title="Just Arrived" products={recentProducts} type="recent" />
           </section>
+
+          <section className="w-full overflow-hidden">
+            <ProductRow title="Best Sellers" products={topSoldProducts} type="best-seller" />
+          </section>
+
         </div>
       )}
 

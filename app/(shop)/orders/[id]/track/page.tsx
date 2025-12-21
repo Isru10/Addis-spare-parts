@@ -27,8 +27,13 @@ export default async function TrackingPage({ params }: { params: Promise<{ id: s
   
   // Find order by the REQUEST ID (since user clicks from Request page)
   // OR create a direct link logic. Let's assume we find by RequestId for easier linking.
-  const order : any= await PartRequestOrder.findOne({ requestId: id }).lean();
-
+  // const order : any= await PartRequestOrder.findOne({ requestId: id }).lean();
+const order: any = await PartRequestOrder.findOne({
+    $or: [
+      { _id: id },        // Direct Order ID match
+      { requestId: id }   // Request ID match (Legacy/Alternative link)
+    ]
+  }).lean();
   if (!order) return <div className="p-8 text-center">Order not found yet. Payment might be verifying.</div>;
 
   const currentStepIndex = STEPS.findIndex(s => s.status === order.logisticsStatus);
