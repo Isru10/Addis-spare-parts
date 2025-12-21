@@ -33,7 +33,7 @@ const PartRequestSchema = new Schema({
     price: { type: Number }, // Unit Price
     depositRequired: { type: Number }, // usually 50% or 100%
     estimatedArrival: { type: String }, // "15-20 Days"
-    shippingMethod: { type: String, enum: ['Air Freight', 'Sea Freight'] },
+    shippingMethod: { type: String, enum: ['Air Freight', 'Sea Freight', 'Local Stock'] },
     adminNotes: { type: String }, // "Found original Denso part in Dubai"
     quotedAt: { type: Date }
   },

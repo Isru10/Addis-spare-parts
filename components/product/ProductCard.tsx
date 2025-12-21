@@ -1,15 +1,15 @@
-// // // src/components/product/ProductCard.tsx
 
 // "use client";
 
 // import Image from "next/image";
 // import Link from "next/link";
+// import { useRouter } from "next/navigation";
 // import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 // import { Button } from "../ui/button";
 // import { IProduct } from "@/types/product";
 // import { useAppDispatch } from "@/redux/hooks";
 // import { addItem } from "@/redux/slices/cartSlice";
-// import { ShoppingCart } from "lucide-react";
+// import { ShoppingCart, ArrowRight, Layers } from "lucide-react";
 // import { cn } from "@/lib/utils";
 
 // interface ProductCardProps {
@@ -18,9 +18,19 @@
 
 // export default function ProductCard({ product }: ProductCardProps) {
 //   const dispatch = useAppDispatch();
+//   const router = useRouter();
 
-//   const handleAddToCart = (e: React.MouseEvent) => {
+//   const hasMultipleVariants = product.variants.length > 1;
+//   const isOutOfStock = product.variants.every(v => v.stock === 0);
+
+//   const handleAction = (e: React.MouseEvent) => {
 //     e.preventDefault(); 
+    
+//     if (hasMultipleVariants) {
+//       router.push(`/product/${product._id}`);
+//       return;
+//     }
+
 //     if (product.variants.length > 0) {
 //       const selectedVariant = product.variants[0];
 //       dispatch(addItem({
@@ -34,19 +44,27 @@
 //     <Card className="group h-full flex flex-col border rounded-lg shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden bg-card">
       
 //       {/* 1. Image Header */}
-//       < href={`/product/${product._id}`} className="block w-full">
+//       <Link href={`/product/${product._id}`} className="block w-full">
 //         <CardHeader className="p-0 relative aspect-square bg-muted/5 border-b">
 //           <Image
 //             src={product.images[0] || "/placeholder-product.png"}
 //             alt={product.name}
 //             fill
 //             sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
-//             className="object-cover transition-transform duration-300 group-hover:scale-105"
+//             className={cn(
+//               "object-cover transition-transform duration-300 group-hover:scale-105",
+//               isOutOfStock && "opacity-50 grayscale"
+//             )}
 //             loading="lazy"
 //           />
+//           {/* Options Badge */}
+//           {hasMultipleVariants && (
+//             <div className="absolute bottom-1 right-1 bg-black/70 text-white text-[9px] px-1.5 py-0.5 rounded backdrop-blur-sm flex items-center gap-1">
+//               <Layers className="h-3 w-3" />
+//             </div>
+//           )}
 //         </CardHeader>
-//       </
-// Link>
+//       </Link>
 
 //       {/* 2. Content */}
 //       <CardContent className="p-2 flex flex-col gap-0.5 flex-grow">
@@ -70,25 +88,40 @@
 //       {/* 3. Footer */}
 //       <CardFooter className="p-2 pt-0 flex items-end justify-between gap-1 mt-auto">
 //         <div className="flex flex-col">
-//           <span className="text-[9px] text-muted-foreground leading-none mb-0.5">From</span>
+//           <span className="text-[9px] text-muted-foreground leading-none mb-0.5">
+//             {hasMultipleVariants ? "From" : "Price"}
+//           </span>
 //           <span className="text-sm sm:text-base font-bold text-primary leading-none">
 //             ${product.displayPrice.toFixed(2)}
 //           </span>
 //         </div>
 
-//         {/* FIX: Icon Only Button */}
+//         {/* 
+//            UNIFIED BUTTON STYLE:
+//            - Square (h-8 w-8)
+//            - Icon Only (ShoppingCart or ArrowRight)
+//            - Consistent across Mobile & Desktop
+//         */}
 //         <Button 
-//           onClick={handleAddToCart} 
-//           disabled={product.variants.length === 0}
-//           size="icon" // Using size="icon" base
+//           onClick={handleAction} 
+//           disabled={isOutOfStock}
+//           size="icon"
 //           className={cn(
-//             "h-8 w-8 p-0 rounded-md shrink-0", // Fixed square size, no padding
-//             "bg-primary hover:bg-primary/90 shadow-sm"
+//             "h-8 w-8 p-0 rounded-md shrink-0 transition-colors shadow-sm", 
+//             hasMultipleVariants 
+//               ? "bg-secondary text-secondary-foreground hover:bg-secondary/80" 
+//               : "bg-primary hover:bg-primary/90 text-primary-foreground"
 //           )}
-//           title="Add to Cart"
+//           title={hasMultipleVariants ? "Select Options" : "Add to Cart"}
 //         >
-//           <ShoppingCart className="h-4 w-4" />
-//           <span className="sr-only">Add</span>
+//           {hasMultipleVariants ? (
+//             <ArrowRight className="h-4 w-4" />
+//           ) : (
+//             <ShoppingCart className="h-4 w-4" />
+//           )}
+//           <span className="sr-only">
+//             {hasMultipleVariants ? "Select" : "Add"}
+//           </span>
 //         </Button> 
 //       </CardFooter>
 //     </Card>
@@ -99,34 +132,25 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "../ui/button";
 import { IProduct } from "@/types/product";
 import { useAppDispatch } from "@/redux/hooks";
 import { addItem } from "@/redux/slices/cartSlice";
-import { ShoppingCart, ArrowRight, Layers } from "lucide-react";
+import { ShoppingCart, Plus, Flame, Sparkles } from "lucide-react"; // Import Icons
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge"; // Import Badge
 
 interface ProductCardProps {
   product: IProduct;
+  badgeType?: "new" | "hot" | "sale"; // NEW PROP
 }
 
-export default function ProductCard({ product }: ProductCardProps) {
+export default function ProductCard({ product, badgeType }: ProductCardProps) {
   const dispatch = useAppDispatch();
-  const router = useRouter();
 
-  const hasMultipleVariants = product.variants.length > 1;
-  const isOutOfStock = product.variants.every(v => v.stock === 0);
-
-  const handleAction = (e: React.MouseEvent) => {
+  const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault(); 
-    
-    if (hasMultipleVariants) {
-      router.push(`/product/${product._id}`);
-      return;
-    }
-
     if (product.variants.length > 0) {
       const selectedVariant = product.variants[0];
       dispatch(addItem({
@@ -137,8 +161,20 @@ export default function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <Card className="group h-full flex flex-col border rounded-lg shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden bg-card">
+    <Card className="group h-full flex flex-col border rounded-lg shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden bg-card relative">
       
+      {/* BADGE OVERLAY */}
+      {badgeType === "new" && (
+        <Badge className="absolute top-2 left-2 z-10 bg-blue-600 text-white border-none shadow-sm text-[9px] px-1.5 py-0.5 h-5 flex items-center gap-1">
+          <Sparkles className="h-3 w-3" /> NEW
+        </Badge>
+      )}
+      {badgeType === "hot" && (
+        <Badge className="absolute top-2 left-2 z-10 bg-orange-600 text-white border-none shadow-sm text-[9px] px-1.5 py-0.5 h-5 flex items-center gap-1">
+          <Flame className="h-3 w-3" /> HOT
+        </Badge>
+      )}
+
       {/* 1. Image Header */}
       <Link href={`/product/${product._id}`} className="block w-full">
         <CardHeader className="p-0 relative aspect-square bg-muted/5 border-b">
@@ -147,34 +183,30 @@ export default function ProductCard({ product }: ProductCardProps) {
             alt={product.name}
             fill
             sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
-            className={cn(
-              "object-cover transition-transform duration-300 group-hover:scale-105",
-              isOutOfStock && "opacity-50 grayscale"
-            )}
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
             loading="lazy"
           />
-          {/* Options Badge */}
-          {hasMultipleVariants && (
-            <div className="absolute bottom-1 right-1 bg-black/70 text-white text-[9px] px-1.5 py-0.5 rounded backdrop-blur-sm flex items-center gap-1">
-              <Layers className="h-3 w-3" />
-            </div>
-          )}
         </CardHeader>
       </Link>
 
-      {/* 2. Content */}
-      <CardContent className="p-2 flex flex-col gap-0.5 flex-grow">
+      {/* 2. Content - Ultra Compact & Fixed Heights */}
+      <CardContent className="p-2 flex flex-col gap-0.5">
+        
+        {/* Brand */}
         <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider truncate leading-none mb-0.5">
           {product.brand}
         </p>
         
         <Link href={`/product/${product._id}`} className="block group/link space-y-0.5">
+          {/* Title - Truncated 1 line */}
           <h3 
             className="text-xs sm:text-sm font-semibold text-foreground truncate h-5 leading-5 group-hover/link:text-primary transition-colors" 
             title={product.name}
           >
             {product.name}
           </h3>
+          
+          {/* Description - Truncated 1 line */}
           <p className="text-[10px] text-muted-foreground truncate h-4 leading-4 block">
             {product.description}
           </p>
@@ -184,40 +216,25 @@ export default function ProductCard({ product }: ProductCardProps) {
       {/* 3. Footer */}
       <CardFooter className="p-2 pt-0 flex items-end justify-between gap-1 mt-auto">
         <div className="flex flex-col">
-          <span className="text-[9px] text-muted-foreground leading-none mb-0.5">
-            {hasMultipleVariants ? "From" : "Price"}
-          </span>
+          <span className="text-[9px] text-muted-foreground leading-none mb-0.5">From</span>
           <span className="text-sm sm:text-base font-bold text-primary leading-none">
             ${product.displayPrice.toFixed(2)}
           </span>
         </div>
 
-        {/* 
-           UNIFIED BUTTON STYLE:
-           - Square (h-8 w-8)
-           - Icon Only (ShoppingCart or ArrowRight)
-           - Consistent across Mobile & Desktop
-        */}
+        {/* Button */}
         <Button 
-          onClick={handleAction} 
-          disabled={isOutOfStock}
-          size="icon"
+          onClick={handleAddToCart} 
+          disabled={product.variants.length === 0}
+          size="sm"
           className={cn(
-            "h-8 w-8 p-0 rounded-md shrink-0 transition-colors shadow-sm", 
-            hasMultipleVariants 
-              ? "bg-secondary text-secondary-foreground hover:bg-secondary/80" 
-              : "bg-primary hover:bg-primary/90 text-primary-foreground"
+            "h-7 min-w-[28px] px-0 sm:px-3 text-xs shadow-sm", 
+            "bg-primary hover:bg-primary/90"
           )}
-          title={hasMultipleVariants ? "Select Options" : "Add to Cart"}
         >
-          {hasMultipleVariants ? (
-            <ArrowRight className="h-4 w-4" />
-          ) : (
-            <ShoppingCart className="h-4 w-4" />
-          )}
-          <span className="sr-only">
-            {hasMultipleVariants ? "Select" : "Add"}
-          </span>
+          <Plus className="h-4 w-4 sm:hidden" />
+          <ShoppingCart className="hidden sm:inline-block h-3.5 w-3.5 sm:mr-1.5" />
+          <span className="hidden sm:inline font-medium">Add</span>
         </Button> 
       </CardFooter>
     </Card>

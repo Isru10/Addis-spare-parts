@@ -20,7 +20,7 @@ function SearchInputContent({ className, onSearch }: SearchInputProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [query, setQuery] = useState("");
-
+// EthioWeb3_CSEC#123
   useEffect(() => {
     setQuery(searchParams.get("q") || "");
   }, [searchParams]);
@@ -30,6 +30,14 @@ function SearchInputContent({ className, onSearch }: SearchInputProps) {
     
     if (!query.trim()) {
       router.push("/products");
+      return;
+    }
+
+
+        const cleanQuery = query.trim().toUpperCase();
+    if (cleanQuery.startsWith("CLM") || cleanQuery.startsWith("CLAIM")) {
+      router.push(`/claim/${cleanQuery}`);
+      if (onSearch) onSearch();
       return;
     }
 

@@ -429,8 +429,9 @@ export function AdminSidebar() {
             <CollapsibleContent>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={pathname.startsWith("/admin/insurance")}>
+                  <SidebarMenuItem>                      
+
+                    <SidebarMenuButton asChild isActive={pathname === "/admin/insurance" || (pathname.startsWith("/admin/insurance/") && !pathname.includes("/partners"))}>
                       <Link href="/admin/insurance">
                         <ShieldCheck />
                         <span>Claims & Quotes</span>

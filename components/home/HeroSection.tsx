@@ -205,7 +205,7 @@ export default function HeroSection() {
                 <Search className="h-5 w-5 text-gray-400" />
               </div>
               <Input 
-                placeholder="Search by Part Name..." 
+                placeholder="Search by Part Name.." 
                 className="h-16 pl-12 pr-4 rounded-full bg-white/10 backdrop-blur-md border-white/20 text-white placeholder:text-gray-400 text-lg focus-visible:ring-white/50 focus-visible:bg-white/20 transition-all"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
