@@ -159,3 +159,43 @@ html, body {
 .animate-marquee {
   animation: marquee 30s linear infinite;
 }
+
+
+
+
+@media print {
+  /* HIDE UI ELEMENTS */
+  header, nav, aside, footer, .no-print, button {
+    display: none !important;
+  }
+
+  /* RESET LAYOUT FOR PRINT */
+  body, main, .container {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    background: white !important;
+    overflow: visible !important;
+  }
+
+  /* ENSURE IMAGES AND COLORS PRINT */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* FORCE CARD TO FULL WIDTH */
+  #printable-area {
+    position: static !important;
+    width: 100% !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+  
+  /* FORCE STAMP VISIBILITY */
+  img {
+    display: block !important;
+    opacity: 1 !important;
+  }
+}
