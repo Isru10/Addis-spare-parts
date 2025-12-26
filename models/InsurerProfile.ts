@@ -12,7 +12,7 @@ const InsurerProfileSchema = new Schema({
   licenseDocument: { type: String, required: true }, // Cloudinary URL of their ID/License
   
   // Contact for Claims
-  officialEmail: { type: String, required: true }, 
+  officialEmail: { type: String, required: true, unique: true, index: true }, 
   officialPhone: { type: String, required: true },
 
   // Application Status

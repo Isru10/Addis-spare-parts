@@ -19,6 +19,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Application already submitted." }, { status: 400 });
     }
 
+
+
+    const existingEmail = await InsurerProfile.findOne({ officialEmail: body.officialEmail });
+    if (existingEmail) {
+      return NextResponse.json({ 
+        error: "This Official Email is already registered by another partner." 
+      }, { status: 400 });
+    }
+
+
+
+
     await InsurerProfile.create({
       userId: user.id,
       companyName: body.companyName,
@@ -34,6 +46,10 @@ export async function POST(req: Request) {
 
   } catch (error: any) {
     console.error("Insurer Reg Error:", error);
+        if (error.code === 11000) {
+      return NextResponse.json({ error: "An account with this Email or User ID already exists." }, { status: 400 });
+    }
+
     return NextResponse.json({ error: "Registration failed." }, { status: 500 });
   }
 }

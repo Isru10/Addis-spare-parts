@@ -27,7 +27,12 @@ export default async function InsurerLayout({
     
     if (!profile) redirect("/insurer/register");
     if (profile.status === 'Pending') redirect("/insurer/pending");
-    if (profile.status === 'Rejected') redirect("/");
+    if (profile.status === 'Rejected') redirect("/"); 
+
+    if (profile.status === 'Suspended') redirect("/insurer/suspended");
+    if (profile.status !== 'Approved') redirect("/insurer/suspended");
+
+    
   }
 
   return (

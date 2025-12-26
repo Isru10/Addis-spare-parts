@@ -3,6 +3,8 @@ import dbConnect from "@/lib/mongodb";
 import InsuranceRequest from "@/models/InsuranceRequest";
 import InsurerProfile from "@/models/InsurerProfile";
 import { getCurrentUser } from "@/lib/session";
+import { v4 as uuidv4 } from 'uuid'; 
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 export async function POST(req: Request) {
@@ -19,11 +21,17 @@ export async function POST(req: Request) {
     const profile = await InsurerProfile.findOne({ userId: user.id });
     if (!profile) return NextResponse.json({ error: "Insurer profile not found" }, { status: 404 });
     if (profile.status !== 'Approved') return NextResponse.json({ error: "Account not approved" }, { status: 403 });
+   
+   
+   
+    const year = new Date().getFullYear();
+    const uniqueSuffix = uuidv4().substring(0, 6).toUpperCase();
+    const claimRef = `CLM-${year}-${uniqueSuffix}`;
 
     // 2. Create Request
     const newRequest = await InsuranceRequest.create({
       insurerId: profile._id,
-      claimReferenceNumber: body.claimReferenceNumber,
+      claimReferenceNumber: claimRef,
       vehicleDetails: body.vehicleDetails,
       requestedPartsList: body.requestedPartsList,
       officialDocumentUrl: body.officialDocumentUrl,
